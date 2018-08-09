@@ -152,4 +152,39 @@ def updatepos(dirpath, time_cutoff):
 	
 	print("*(metadata) >> At time = {}, r1 = ({}, {}, {}) and r2 = ({}, {}, {}) \n".format(time_shtr[cutoff_idx_shtr], r1[0], r1[1], r1[2], r2[0], r2[1], r2[2]))
 	return [r1,r2, v1,v2]
+def func_phase(varphase):
 
+	varphi = np.copy(varphase)
+	for i in range(len(varphase)):
+		if abs(varphase[i-1]-varphase[i]-2.*np.pi)<0.1:
+			varphi[i:] = varphi[i:] + 2.*np.pi
+	return varphi
+
+def write_sep_data(filename,hdr, outdir, data):
+	output_traj = open(os.path.join(outdir, filename),'w')
+	np.savetxt(output_traj, data, header=hdr, delimiter='\t', newline='\n')
+	output_traj.close()
+
+def find_omega22_st(dirpath, time_cutoff):
+	
+	datadir = os.path.join(dirpath, "data")	
+
+	shifttracker0 = importfile(datadir, 'ShiftTracker0.asc', Importance='Required')
+	shifttracker1 = importfile(datadir, 'ShiftTracker1.asc', Importance='Required')
+
+	time_shtr = np.loadtxt(shifttracker0, usecols = (1), comments = '#')
+	temparr_shtr = np.intersect1d(np.where(time_shtr>=time_cutoff),  np.where(time_shtr<=150))
+
+	time_shtr1, r1x, r1y, r1z = np.loadtxt(shifttracker0, usecols = (1,2,3,4), comments = '#', unpack=True)
+	time_shtr2, r2x, r2y, r2z = np.loadtxt(shifttracker1, usecols = (1,2,3,4), comments = '#', unpack=True)
+	
+	x = r1x - r2x
+	y = r1y - r2y
+	phase = np.arctan2(y, x)
+	
+	phi = func_phase(phase[temparr_shtr])
+        t = time_shtr1[temparr_shtr]
+	omega = np.gradient(phi)/np.gradient(t)	
+
+	return omega
+   	

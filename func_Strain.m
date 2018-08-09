@@ -59,9 +59,18 @@ end
 
 %% Copy the necessary files from corresponding numrel - waveforms directory
 
+%dirname_check = strsplit(dirname{1}, '-');
+%if strcmp(dirname_check(length(dirname_check)),'all')
+%    simname = strcat(dirname_check(1:length(dirname_check)-1));
+%else
+%    simname = dirname{1};
+%end
+
+simname = strsplit(dirname{1},'-all')
+fprintf('%s \n',simname{1})
+parfile = fullfile(wfpath,strcat(simname{1}, '.par'))    % [dirname{1},'.par']) ;
 shifttracker0 = fullfile(wfpath , 'ShiftTracker0.asc');
 shifttracker1 = fullfile(wfpath , 'ShiftTracker1.asc');
-parfile = fullfile(wfpath, [dirname{1},'.par']) ;
 ihspin0 = fullfile(wfpath , 'ihspin_hn_0.asc');
 ihspin1 = fullfile(wfpath , 'ihspin_hn_1.asc');
 ihspin3 = fullfile(wfpath , 'ihspin_hn_3.asc');
@@ -77,7 +86,7 @@ mp_l6 = fullfile(wfpath, 'mp_WeylScal4::Psi4i_l6_m6_r75.00.asc');
 
 copyfile(shifttracker0, datadir);
 copyfile(shifttracker1, datadir);
-copyfile(parfile, datadir);
+copyfile(parfile, datadir)
 
 if exist(hnmass0) && exist(hnmass1)
 copyfile(hnmass0, datadir);

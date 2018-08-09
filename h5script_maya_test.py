@@ -12,7 +12,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 from matplotlib.pyplot import *
-import glob, os, shutil
+import glob, os
 import romspline
 from bundlers import nr2h5
 from metadata import metadata
@@ -94,7 +94,7 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
    	print("h5_maya >> Time at max amplitude = %f"%t_maxamp)
 
     #The for loop ensures all the modes are included in this dictionary
-    for strfile in glob.glob(strdir+'/Strain*.txt'):
+    for strfile in sorted(glob.glob(strdir+'/Strain*.txt')):
     
 	# NOTE: here we determine l and m from the filename. This assumes that each
 	# strain file has data for only one l and one m.
@@ -115,13 +115,12 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
     	# Crop the data to remove the junk radiation
 	time_crop, hp, hx, crop_idx, junkrad_time = crop_data(dirpath, time_uncrop, hp_uncrop, hx_uncrop)
 
-	#Mean Center the data about max amplitude
-	time = time_crop - t_maxamp
+	time = time_crop #- t_maxamp
 
 
 	# Calculate the waveform amplitude and phase  '''Comment - Why unwrapping'''
 	A = abs(hp +1j*hx)
-	phase = -unwrap(angle(hp + 1j*hx))  #Check this with Juan
+	phase = unwrap(angle(hp + 1j*hx))  #Check this with Juan
 
     	# NOTE: The NR-Injection infrastructure requests that phase decreases if m is positive. Here we multiply by -1 to enforce this.
 	phase *= -1
@@ -156,8 +155,27 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
 
     	# Create a dictionary that contains the NR data. This will be used as an input to the function that actually makes the h5 file.
         nr_strain_data[ (l,m) ] = { 'amp':A, 'phase':phase, 't':time }
-    
+   
 	
+    #Mean Center the data about max amplitude
+    amp_sq = np.zeros(len(nr_strain_data[(2,2)]['t']))
+    for key in nr_strain_data:
+	 amp_sq = amp_sq + nr_strain_data[key]['amp']**2 
+	
+    amp_max_idx = np.where(amp_sq==np.amax(amp_sq))
+    amp22_max_idx = np.where(nr_strain_data[(2,2)]['amp']==np.amax(nr_strain_data[(2,2)]['amp']))
+	
+    #Check for difference between peak of amplitude-all modes,  and peak of 2,2 mode amplitude
+    
+    diff = (nr_strain_data[key]['t'][amp_max_idx] - nr_strain_data[key]['t'][amp22_max_idx])
+    if diff>5:
+	raise ValueError('Unexpected difference of %gM observed between time of peak of 22 mode and time of peak of strain amplitude (all modes). Some mode is behaving incorrectly'%diff)
+
+    for key in nr_strain_data:
+	time = nr_strain_data[key]['t'] - nr_strain_data[key]['t'][amp_max_idx]
+	nr_strain_data[key]['t'] = time	
+
+
 	
     # Below we estimate the starting frquency of the waveform scaled at 1Msolar
     G = 6.67428e-11 # m^3/(kg s^2)
@@ -195,8 +213,8 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
     sh.move(outpath, movepath_h5)
 
 
-#wf_direc = "/nethome/numrel/datafiles/Finalized_Waveforms/Waveform_files/Remaining/Precessing/fr_b5_a0.6_oth.315_M77"
-h5output_path = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms" 
+#wf_direc = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/Waveform_files/Remaining/Precessing/Lq_D6.2_q2.50_a0.6_th015_m140"
+h5output_path = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/H5Files" 
 wfoutput_path = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/Waveform_files/Completed"
 failed_path = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/Waveform_files/Failed/NonSpinning"
 wf_direc = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/Waveform_files/Remaining/NonSpinning"
@@ -210,7 +228,10 @@ for direc in os.listdir(wf_direc):
 	if os.path.isdir(direc_path):
 		print("Starting the python script to create h5 files for waveform - {}".format(direc))
 		try:
-  		    create_single_h5(direc_path, h5output_path, wfoutput_path, verbose=True)
-		except (ValueError, shutil.Error):	#Remove except condition if testing Failed waveforms
+  			create_single_h5(direc_path, h5output_path, wfoutput_path, verbose=True)
+		except (ValueError, NameError) as error :	#Remove except condition if testing Failed waveforms
+			print("An Error occured. The file is being moved to Failed Directory")
+			sh.move(direc_path, failed_path )
+		except (sh.Error) as error :	#Remove except condition if testing Failed waveforms
 			print("An Error occured. The file is being moved to Failed Directory")
 			sh.move(direc_path, failed_path )

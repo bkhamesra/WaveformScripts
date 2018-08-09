@@ -90,7 +90,8 @@ def metadata(dirpath, jkrad_time, Error_Series = False):
 
 # Computing eccentricity and mean anomaly
 	[mean_anomaly, eccentricity] = ecc_and_anomaly(dirpath,  jkrad_time)
-
+	if np.isnan(mean_anomaly) or np.isinf(mean_anomaly):
+		raise NameError("Mean Anomaly Value not correct(%g). Please check the computation method"%mean_anomaly)
 	print("*(metadata) >> Final Information \n")
 	print("*(metadata) >> Mass Ratio of system = {} \n".format(q))
 	print("*(metadata) >> Initial separation  = {} and nhat = {} \n".format(init_sep, nhat))
@@ -150,8 +151,15 @@ def metadata(dirpath, jkrad_time, Error_Series = False):
         nr_metadata['eccentricity'] = eccentricity
 	nr_metadata['mean_anomaly'] = mean_anomaly
 	nr_metadata['Warning1'] = "Please do not use m=0 modes. For caution, they are set to zero!"
-	nr_metadata['Warning2'] = warning1
-	nr_metadata['Warning3'] = warning2
+
+	if len(warning1)>0:
+	    nr_metadata['Warning2'] = warning1
+
+	if len(warning2)>0 and len(warning1)>0:
+	    nr_metadata['Warning3'] = warning2
+	elif len(warning2)>0:
+	    nr_metadata['Warning2'] = warning2
+
 	return nr_metadata
 
 

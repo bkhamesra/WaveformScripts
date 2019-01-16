@@ -3,8 +3,6 @@ File to create hdf5 file for LAL injection from NS NR data.
 		
 The hdf5 files are to be used in the "LIGO NR-Injection infrastructure":https://arxiv.org/pdf/1703.01076.pdf
 
-Notes - Keep the junkradiation file in the Waveform directory or modify its path
-
 '''
 
 from numpy import loadtxt,sqrt,angle,unwrap,diff,pi
@@ -20,10 +18,11 @@ from metadata_functions import output_data, error, simulation_name, find_omega22
 from init_data import initial_data
 import shutil as sh
 
+
 def crop_data(dirpath, time, hp, hx):
  
-    #Open the text file which has the data about the time duration of junk radiation    
-    file_name = dirpath.split('/')[-1]
+    #Read the time duration of junk radiation  from wf_junkrad.txt
+    sim_name = dirpath.split('/')[-1]
     wf_junkrad = 'wf_junkrad.txt'
     
     wfdata = np.genfromtxt(wf_junkrad, dtype=None, comments='#', usecols=(1,4), skip_header=1, delimiter = '\t', names = ('simname', 'time'))
@@ -33,14 +32,14 @@ def crop_data(dirpath, time, hp, hx):
     
     #Find the index where to crop off the data
     
-    if np.array(np.where(wfname==file_name)).size==0:
+    if np.array(np.where(wfname==sim_name)).size==0:
 	msg = 'GT simulation not in wf_junkrad.txt. Please check the file.'
 	raise ValueError(msg)
-    elif np.array(np.where(wfname==file_name)).size>1:
-	msg = 'Multiple occurences of GT simulation - {} in wf_junkrad.txt - Please check the file.'.format(file_name)
+    elif np.array(np.where(wfname==sim_name)).size>1:
+	msg = 'Multiple occurences of GT simulation - {} in wf_junkrad.txt - Please check the file.'.format(sim_name)
 	raise NameError(msg)
     else: 
-	idx = (np.where(wfname == file_name))[0][0]
+	idx = (np.where(wfname == sim_name))[0][0]
 	
 
     if np.array(np.where(time==jkrad_time[idx])).size==0:
@@ -64,15 +63,15 @@ def create_plot(varx, vary, label_x, label_y, figpath, figname):
 	plot(varx, vary )
 	xlabel(label_x)
 	ylabel(label_y)
-	savefig(figpath+'/'+figname)
+	savefig(os.path.join(figpath,figname))
 	close()
   
 
 def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dirpath - path to directory which contains the strain data of the waveform
 			
 
-    file_name = dirpath.split('/')[-1]
-    print("*(Create_Single_h5) >> Constructing h5 waveform for simulation - {} \n ".format(file_name)) 
+    localsim_name = dirpath.split('/')[-1]
+    print("*(Create_Single_h5) >> Constructing h5 waveform for simulation - {} \n ".format(localsim_name)) 
   
     #Add path of directories to read data and save figures- 
     figdir = os.path.join(dirpath, "figures")
@@ -94,7 +93,7 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
     lmax=ltemp = 0
 
 
-    # Safety Check
+     # Safety Check
     if not os.path.isfile(strdir+'/Strain_l2_m2.txt'): 
 	error('*(Create_Single_h5) >> Strain Files Missing \n')
     #else:
@@ -118,7 +117,7 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
 	    lmax = ltemp
    
 	# Load the data
-	data_array = loadtxt(strfile, comments='#')#, skiprows=2)
+	data_array = loadtxt(strfile, comments='#')
 
     	# Unpack the data array (get time, plus and cross )
 	time_uncrop, hp_uncrop, hx_uncrop  = data_array[:,0], data_array[:,1], data_array[:,2]
@@ -126,12 +125,14 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
     	# Crop the data to remove the junk radiation
 	time_crop, hp, hx, crop_idx, junkrad_time = crop_data(dirpath, time_uncrop, hp_uncrop, hx_uncrop)
 
+	'''Needs to be modified for extrapolated waveforms!'''
 	time = time_crop 
 
 
 	# Calculate the waveform amplitude and phase  (Unwrapping phase  - Request from NR-injection Infrastructure
 	A = abs(hp -1j*hx)
 	phase = -1.0*unwrap(angle(hp - 1j*hx))  #Check this with Juan
+
 
     	# NOTE: The NR-Injection infrastructure requests that phase decreases if m is positive. Here we multiply by -1 to enforce this.
 	phase *= -1
@@ -142,7 +143,7 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
 	    A *= 0.
 	    phase *=0.	
 
-
+	
     	# Create a dictionary that contains the NR data. This will be used as an input to the function that actually makes the h5 file.
         nr_strain_data[ (l,m) ] = { 'amp':A, 'phase':phase, 't':time }
    
@@ -161,11 +162,29 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
     # Check for difference between peak of amplitude-all modes,  and peak of 2,2 mode amplitude
     
     diff = (nr_strain_data[key]['t'][amp_max_idx] - nr_strain_data[key]['t'][amp22_max_idx])
-    if diff>5:
+	
+    if diff>10:
+	for key in nr_strain_data:
+	    if key[1]==0: 
+		continue
+
+	    maxamp_lm = np.amax(nr_strain_data[key]['amp'])
+	    maxampidx_lm = np.where(nr_strain_data[key]['amp']==maxamp_lm)
+	    t_maxamp_lm = nr_strain_data[key]['t'][maxampidx_lm]
+		
+	    tdiff_lm = nr_strain_data[key]['t'][maxampidx_lm] - nr_strain_data[key]['t'][amp22_max_idx]	
+	    ampdiff_lm = (np.amax(nr_strain_data[(2,2)]['amp']) - maxamp_lm)/np.amax(nr_strain_data[(2,2)]['amp'])*100
+
+ 	    if ((tdiff_lm > 10.0) and (ampdiff_lm<0.1)):
+		print("(%d, %d): t_22 = %g, t_lm = %g, diff = %g, maxamp_22 = %g, maxamp_lm = %g \n"%(key[0], key[1], nr_strain_data[key]['t'][amp22_max_idx], nr_strain_data[key]['t'][maxampidx_lm], tdiff_lm,nr_strain_data[(2,2)]['amp'][amp22_max_idx], maxamp_lm))
+
+ 
+    if diff>10:
 	raise NameError('*(Create_single_h5) >>  Unexpected difference of %gM observed between time of peak of 22 mode and time of peak of strain amplitude (all modes). Some mode is behaving incorrectly'%diff)
     elif verbose:
 	print("*(Create_single_h5) >>  Time difference between peak of strain amplitude and (2,2) mode amplitude is %gM \n"%(diff))
-
+    
+   
 
     # Mean Center the data about max amplitude
 
@@ -272,11 +291,11 @@ for direc in os.listdir(wf_direc):
  	direc_path = os.path.join(wf_direc,direc)
 	if os.path.isdir(direc_path):
 		print("(h5script_Maya)* >> Starting the python script to create h5 files for waveform - {} \n".format(direc))
-		try:
-  			create_single_h5(direc_path, h5output_path, wfoutput_path, verbose=True)
-		except (ValueError, NameError) as error :	#Remove except condition if testing Failed waveforms
-			print("An Error occured. The file is being moved to Failed Directory")
-			sh.move(direc_path, failed_path )
-		except (sh.Error) as error :	#Remove except condition if testing Failed waveforms
-			print("An Error occured. The file is being moved to Failed Directory")
-			sh.move(direc_path, failed_path )
+#		try:
+		create_single_h5(direc_path, h5output_path, wfoutput_path, verbose=True)
+#		except (ValueError, NameError) as error :	#Remove except condition if testing Failed waveforms
+#			print("An Error occured. The file is being moved to Failed Directory")
+#			sh.move(direc_path, failed_path )
+#		except (sh.Error) as error :	#Remove except condition if testing Failed waveforms
+#			print("An Error occured. The file is being moved to Failed Directory")
+#			sh.move(direc_path, failed_path )

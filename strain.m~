@@ -77,18 +77,12 @@ path(genpath(healykit_dir),path);       % add all directories in kit_dir to path
 %wfpath = cellstr(char( '/nethome/numrel/datafiles/Waveforms/archive/s-series/spin0.6/fr_b3.1_a0.6_oth.150_M77'))
 
 clc; clear; 
-kit_dir    = '~/DAKIT/'; % location of your analysis toolkit
-path(genpath(kit_dir),path);       % add all directories in kit_dir to path
-
-healykit_dir    = '~/Documents/MATLAB/HealyToolkit/'; % location of your analysis toolkit
-path(genpath(healykit_dir),path);       % add all directories in kit_dir to path
-
-ligoscripts_dir = '/localdata/bkhamesra3/research_localdata/UsefulScripts/LIGO/LIGO_Scripts/LIGO_Waveform_Scripts';%Add path of this file  
+ligoscripts_dir = '/localdata/bkhamesra3/research_localdata/UsefulScripts/LIGO/LIGO_Scripts/LIGO_Metadata/LIGO_Scripts';%Add path of this file  
 path(genpath(ligoscripts_dir),path);
 
-outdirpath = '/localdata2/bkhamesra3/simulations/Comet/BBH/CatalogRuns/Trash'; %Path where initial strain  output is produced
-numrelpath= '/localdata2/bkhamesra3/simulations/Comet/BBH/CatalogRuns/Trash';
-wfpath = '/nethome/numrel/datafiles/Waveforms/LL-series/q6_LL_D9_a0.6_th1_45_th2_225_m320';
+outdirpath = '/localdata2/bkhamesra3/simulations/Sudarshan_Simulations/Strain_Data'; %Path where initial strain  output is produced
+numrelpath= '/localdata2/bkhamesra3/simulations/Sudarshan_Simulations/Strain_Data';
+wfpath = '/localdata2/bkhamesra3/simulations/Sudarshan_Simulations/D10_q0.75_a-0.8_0.8_n100'
 
 %%% Testing
 %

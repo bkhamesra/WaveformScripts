@@ -126,6 +126,7 @@ else
     lmax = 2;
 end
 
+lmax=2
 fprintf('lmax =  %d \n', lmax)
 %% Check precessing/non-precessing
 spin_plus = [];
@@ -205,6 +206,52 @@ for j = 1:max_idx
 end 
    
 
+if (spintype==2)
+    for j = 1:max_idx
+        [ll,mm] = bn.index_to_lm(j);
+        if ((ll==2) && (mm==2))
+            mm_plus2 =  j;
+        elseif((ll==2) && (mm==-2))
+            mm_minus2 = j;
+            
+        end
+    end
+    
+    fprintf('m=2 index = %d, m=-2 index = %d \n',mm_plus2,mm_minus2); 
+    fig = figure;
+    set(fig, 'Visible', 'off')
+    plot(wf.time, wf.Real(:,mm_plus2),'k', 'DisplayName', 'Real');
+    hold on;
+    plot(wf.time, wf.Real(:,mm_minus2), '--b', 'DisplayName', 'Real');
+    hold off;
+    xlabel('Time');
+    ylabel('Strain Real');
+    legend('show');
+    saveas(fig, fullfile(figdir,sprintf('Strain_l2m2_l2m-2_realcomp.png')));
+    
+    fig = figure;
+    set(fig, 'Visible', 'off')
+    plot(wf.time, wf.Imag(:,mm_plus2),'k', 'DisplayName', 'm=2');
+    hold on;
+    plot(wf.time, wf.Imag(:,mm_minus2), '--b', 'DisplayName', 'm=-2');
+    hold off;
+    xlabel('Time');
+    ylabel('Strain Imag');
+    legend('show');
+    saveas(fig, fullfile(figdir,sprintf('Strain_l2m2_l2m-2_imagcomp.png')));
+    
+    fig = figure;
+    set(fig, 'Visible', 'off')
+    plot(wf.time, wf.Ampl(:,mm_plus2),'k', 'DisplayName', 'm=2');
+    hold on;
+    plot(wf.time, wf.Ampl(:,mm_minus2), '--b', 'DisplayName', 'm=-2');
+    hold off;
+    xlabel('Time');
+    ylabel('Strain Imag');
+    legend('show');
+    saveas(fig, fullfile(figdir,sprintf('Strain_l2m2_l2m-2_ampcomp.png')));
+    
+end
 %% Output data in text file
 
 

@@ -1,20 +1,16 @@
 %% Create the directory of the waveform
-%% Problematic waveforms - Golden Series - All file in .asc.gz form - Change the Section 2. 
-
-
+    
+    
 function [] = func_Strain(outdirpath, wfpath, numrelpath)
 
-
-% add all toolkit files to matlab search directory, assuming your toolkit
-% is in ~/
+%check if output directory exists else create one
 if exist(outdirpath, 'dir')==7
-    warning('Output directory exists at this path')
+    warning('Output directory exists at this path');
 else
-    mkdir(outdirpath)
+    mkdir(outdirpath);
 end
 
-%[path, name, ext] = fileparts(wfpath);
-%direc = fullfile(dirpath, [name, ext]);
+%Extract simulation name and create a directory for this simulation in the output directory
 wfpath_parts = strsplit(wfpath, '/');
 if strcmp(wfpath_parts(length(wfpath_parts)),'')==1
     wfpath_parts = wfpath_parts(1:length(wfpath_parts)-1);
@@ -33,8 +29,9 @@ dirname = dirname_parts(length(dirname_parts));
 outdir =fullfile(outdirpath, strcat(dirname{1}, '/'));
 
 
+% All important data files will be stored in 'data' directory, strain files will be generated in 'data/Strain' directory while strain plots will be generated in 'Strain' directory 
 if exist(outdir,'dir')==7
-     warning('Waveform Directory Already exist inside output directory')
+     warning('Waveform Directory Already exist inside output directory');
 else 
      mkdir(outdir);
 end
@@ -43,32 +40,26 @@ datadir = fullfile(outdir, 'data');
 figdir = fullfile(outdir, 'figures');
 strdir = fullfile(datadir, 'Strain');
 
-fprintf('%f \n', exist(datadir,'dir'))
+%fprintf('%f \n', exist(datadir,'dir'));
 if (exist(datadir,'dir')==0)
-    mkdir(datadir)
+    mkdir(datadir);
 end
 
 if ne(exist(figdir,'dir'),7)
-    mkdir(figdir)
+    mkdir(figdir);
 end
    
 if ne(exist(strdir, 'dir'),7)
-    mkdir(strdir)
+    mkdir(strdir);
 end
 
 
 %% Copy the necessary files from corresponding numrel - waveforms directory
 
-%dirname_check = strsplit(dirname{1}, '-');
-%if strcmp(dirname_check(length(dirname_check)),'all')
-%    simname = strcat(dirname_check(1:length(dirname_check)-1));
-%else
-%    simname = dirname{1};
-%end
-
-simname = strsplit(dirname{1},'-all')
-fprintf('%s \n',simname{1})
-parfile = fullfile(wfpath,strcat(simname{1}, '.par'))    % [dirname{1},'.par']) ;
+% Generate filepaths
+simname = strsplit(dirname{1},'-all');
+fprintf('Simulation name - %s \n',simname{1});
+parfile = fullfile(wfpath,strcat(simname{1}, '.par'));    % [dirname{1},'.par']) ;
 shifttracker0 = fullfile(wfpath , 'ShiftTracker0.asc');
 shifttracker1 = fullfile(wfpath , 'ShiftTracker1.asc');
 ihspin0 = fullfile(wfpath , 'ihspin_hn_0.asc');
@@ -79,11 +70,12 @@ hnmass0 = fullfile(wfpath , 'hn_mass_spin_0.asc');
 hnmass1 = fullfile(wfpath , 'hn_mass_spin_1.asc');
 bhdiag0 = fullfile(wfpath , 'BH_diagnostics.ah1.gp');
 bhdiag1 = fullfile(wfpath , 'BH_diagnostics.ah2.gp');
-psi4_l8 = fullfile(wfpath , 'Ylm_WEYLSCAL4::Psi4r_l8_m8_r75.00.asc'); 
+psi4_l8 = fullfile(wfpath , 'Ylm_WEYLSCAL4::Psi4r_l8_m8_r75.00.asc') ;
 psi4_l6 = fullfile(wfpath , 'Ylm_WEYLSCAL4::Psi4r_l6_m6_r75.00.asc') ;
 mp_l8 = fullfile(wfpath, 'mp_WeylScal4::Psi4i_l8_m8_r75.00.asc');
 mp_l6 = fullfile(wfpath, 'mp_WeylScal4::Psi4i_l6_m6_r75.00.asc');
 
+% Copy the files
 copyfile(shifttracker0, datadir);
 copyfile(shifttracker1, datadir);
 copyfile(parfile, datadir)
@@ -113,6 +105,7 @@ else
     ihfile = 0;
 end 
 
+
 %% Find lmax
 if (exist(psi4_l8,'file')==2)
     lmax = 8;
@@ -126,9 +119,10 @@ else
     lmax = 2;
 end
 
-lmax=2
 fprintf('lmax =  %d \n', lmax)
-%% Check precessing/non-precessing
+
+
+%% Check precessing/aligned-spin/non-spinning
 spin_plus = [];
 
 for k = 0:2
@@ -180,10 +174,18 @@ if (ihfile==1)
     
 end
 wf = bn.calcStrain;
-wf.window_ends();
 
-
-
+%To window a waveform, minimum time after max amplitude (2,2 mode) should
+%be > 120M
+[maxamp22, idx_maxamp22] = max(wf.Ampl(:,5));
+tmax_22 = wf.time(idx_maxamp22);
+tend_junk = tmax_22 + 120;
+if (wf.time(end)>tend_junk)
+    fprintf('Last time = %g, tend junk = %g',wf.time(end), tend_junk);
+    wf.window_ends();
+else
+    fprintf('This waveform is not windowed as data after merger is insufficient.')
+end
         
 %% Make the Plots
 n = bn.ll(end);
@@ -201,8 +203,11 @@ for j = 1:max_idx
     xlabel('Time');
     ylabel('Strain');
     legend('show');
+    %try
     saveas(fig, fullfile(figdir,sprintf('Strain_%d%d.png',ll,mm)));
-    
+    %catch
+    %    shg
+    %end
 end 
    
 
@@ -228,6 +233,7 @@ if (spintype==2)
     ylabel('Strain Real');
     legend('show');
     saveas(fig, fullfile(figdir,sprintf('Strain_l2m2_l2m-2_realcomp.png')));
+    close(fig);
     
     fig = figure;
     set(fig, 'Visible', 'off')
@@ -239,7 +245,8 @@ if (spintype==2)
     ylabel('Strain Imag');
     legend('show');
     saveas(fig, fullfile(figdir,sprintf('Strain_l2m2_l2m-2_imagcomp.png')));
-    
+    close(fig);    
+
     fig = figure;
     set(fig, 'Visible', 'off')
     plot(wf.time, wf.Ampl(:,mm_plus2),'k', 'DisplayName', 'm=2');
@@ -250,7 +257,7 @@ if (spintype==2)
     ylabel('Strain Imag');
     legend('show');
     saveas(fig, fullfile(figdir,sprintf('Strain_l2m2_l2m-2_ampcomp.png')));
-    
+    close(fig);
 end
 %% Output data in text file
 

@@ -53,6 +53,8 @@ def func_fit(function,time, data):
 	return fittingfunc_coeff
 	
 def func_max(time, data):
+
+	print np.amax(data), np.argmax(data), len(data)
 	der = np.divide((data[1:] - data[:-1]), (time[1:] - time[:-1]))
 	i=1
 	while i<len(der):
@@ -306,6 +308,8 @@ def ecc_and_anomaly(dirpath,  jkrad_time):
 	plt.legend()
 	plt.savefig(dirpath + "/figures/Eccfit_after_junk.png")
 	plt.close()
+
+	print len(time_cutoff), len(eccfit_poly(time_cutoff))
 	
 	maxima, tmax  = func_max(time_cutoff, eccfit_poly(time_cutoff))
 	minima, tmin = func_min(time_cutoff, eccfit_poly(time_cutoff))

@@ -22,6 +22,8 @@ def initial_data(dirpath):
 	datadir = os.path.join(dirpath, "data")
 	filename = dirpath.split("/")[-1]
     	parfile = os.path.join(datadir, filename + '.par')
+	if filename[-3:]=='all':
+    	    parfile = os.path.join(datadir, filename[:-4] + '.par')
 
 	if not os.path.isfile(parfile) :
 		raise ValueError(" Parfile missing in the directory. Please check again. \n")

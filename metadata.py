@@ -9,7 +9,7 @@ from eccentricity import *
 import time
 
 
-def metadata(dirpath, jkrad_time, Error_Series = False):
+def metadata(dirpath, jkrad_time, Error_Series = False, verbose=False):
 
 	print("\n \n *(metadata) >> Extracting Metadata - Analysing Data \n")
 	# Extract Filename	
@@ -18,7 +18,10 @@ def metadata(dirpath, jkrad_time, Error_Series = False):
 	#Find junk time in COM frame
 	retarted_junktime = jkrad_time - 75.
 	
-	
+
+	#Check if production run
+	production_run = determine_production_run(dirpath)
+		
 	# Required Information from Parameter file
 	spin1 = np.empty(3)
 	spin2 = np.empty(3)
@@ -47,7 +50,7 @@ def metadata(dirpath, jkrad_time, Error_Series = False):
 	except ValueError:
 		m1 = initdata['puncture_mass1']
 		m2 = initdata['puncture_mass2']
-		q = np.around(m1/m2, decimal=1)
+		q = np.around(m1/m2, decimals=1)
 
 	m_plus = q/(1.+q) 
 	m_minus = 1./(1.+q)
@@ -59,18 +62,18 @@ def metadata(dirpath, jkrad_time, Error_Series = False):
 
 	
 	# Update Position - Always
-	[r1,r2,v1,v2] = updatepos(dirpath, retarted_junktime)
+	[r1,r2,v1,v2] = updatepos(dirpath, retarted_junktime, verbose=verbose)
 
 	
 	#Update Spins - Required for precession
-	[s1,s2, spin_cutofftime] = updatespins(dirpath, retarted_junktime, spin1, spin2)
+	[s1,s2, spin_cutofftime] = updatespins(dirpath, retarted_junktime, spin1, spin2, verbose=verbose)
 	
 	spin1 = s1
 	spin2 = s2
 
 
 	# Update Mass - 
-	m1, m2, mass_cutofftime = updatemass(dirpath, retarted_junktime)
+	m1, m2, mass_cutofftime = updatemass(dirpath, retarted_junktime, verbose=verbose)
 	m_plus = m1
 	m_minus = m2
 	
@@ -78,7 +81,7 @@ def metadata(dirpath, jkrad_time, Error_Series = False):
 	#Orbital Frequency - 
 	orbital_freq = update_orbital_frequency(dirpath, retarted_junktime)
 
-	orbital_freq_phasecomp = find_omega22_st(dirpath, retarted_junktime)
+	orbital_freq_phasecomp = find_omega22_st(dirpath, retarted_junktime)[0]
 
 	print("*(metadata): Orbital Frequency using rxv formula = %g and using orbital phase = %g \n"%(orbital_freq, orbital_freq_phasecomp))
 	# Compute relevant quantities
@@ -86,8 +89,8 @@ def metadata(dirpath, jkrad_time, Error_Series = False):
 	delta_r = r2-r1
 	init_sep = np.linalg.norm(delta_r)
 	nhat = 	delta_r/init_sep
-	
-	assert(mag(nhat)==1.), "Error: Norm of nhat vector = %g (not normalized)"%mag(nhat)	
+
+	assert(np.around(mag(nhat), decimals=3)==1.), "Error: Norm of nhat vector = %g (not normalized)"%mag(nhat)	
 
 	#Mass Ratio
 	q = m_plus/m_minus
@@ -99,7 +102,7 @@ def metadata(dirpath, jkrad_time, Error_Series = False):
 	
 	orb_angmom = np.cross(r1,p1) + np.cross(r2,p2)
 	Lhat = orb_angmom/np.linalg.norm(orb_angmom)
-	assert(mag(Lhat)==1.), "Error: Norm of Lhat vector = %g (not normalized)"%mag(Lhat)	
+	assert(np.around(mag(Lhat), decimals=3)==1.), "Error: Norm of Lhat vector = %g (not normalized)"%mag(Lhat)	
 	
 	#Horizon Mass
 	s1_mag = np.sqrt(s1[0]**2 + s1[1]**2 + s1[2]**2)
@@ -125,7 +128,7 @@ def metadata(dirpath, jkrad_time, Error_Series = False):
 	# Computing eccentricity and mean anomaly
 	[mean_anomaly, eccentricity] = ecc_and_anomaly(dirpath,  jkrad_time)
 	
-	if qc_sys and ecc>1.e-3:
+	if qc_sys and eccentricity>1.e-3:
 		print("*(Metadata) >> Warning: Eccentricity of system too high (%g) for being quasicircular \n"%eccentricity)
 
 	if np.isnan(mean_anomaly) or np.isinf(mean_anomaly):
@@ -167,7 +170,7 @@ def metadata(dirpath, jkrad_time, Error_Series = False):
 		nr_metadata['files-in-error-series'] = ''
 		nr_metadata['comparable-simulation'] = comp_sim	#need to check for each simulation
 
-	nr_metadata['production-run'] = 1		#set to 0 for lower resolution runs
+	nr_metadata['production-run'] = production_run
 	nr_metadata['object1'] = 'BH'
 	nr_metadata['object2'] = 'BH'
 	nr_metadata['init_sep'] = init_sep

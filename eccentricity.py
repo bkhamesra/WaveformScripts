@@ -53,6 +53,8 @@ def func_fit(function,time, data):
 	return fittingfunc_coeff
 	
 def func_max(time, data):
+
+	print np.amax(data), np.argmax(data), len(data)
 	der = np.divide((data[1:] - data[:-1]), (time[1:] - time[:-1]))
 	i=1
 	while i<len(der):
@@ -90,7 +92,47 @@ def func_min(time, data):
 	except NameError:
 		print("*(metadata) >> Minima: no minima found \n")
 
+def func_phase(varphase):
+
+	varphi = np.copy(varphase)
+	for i in range(len(varphase)):
+		if abs(varphase[i-1]-varphase[i]-2.*np.pi)<0.1:
+			varphi[i:] = varphi[i:] + 2.*np.pi
+	return varphi
+
 def mean_anomaly(t, time_arr, r1, r2, deltar_arr):
+	
+	index_t = np.amin(np.where(time_arr>=t))
+
+	periapsis_time = []
+	sep = (r1-r2)
+	x, y, z = sep
+	phase =np.arctan2(y, x)
+	phase = func_phase(phase)*180./np.pi
+	
+	T_prev = 0.
+	
+
+	for k in range(len(time_arr)):
+	    if phase[k]>(360.+phase[0]):
+		T_next = time_arr[k]
+		#print("time at junk = %g, current time = %g, phase = %g, initial position of BH1 = (%g, %g, %g), final position = (%g, %g, %g))"%(t, time_arr[k], phase[k], r1[0,0], r1[1,0], r1[2,0], r1[0,k],r1[1,k], r1[2,k]))
+		break
+	    elif (k==len(time_arr)-1):
+		raise ValueError("Last iteration reached but periapsis not found. Please check the data.")
+
+	time_period = T_next-T_prev
+	if T_prev >-1 and T_prev<t:
+		mean_anomaly = 2.*np.pi*(t-T_prev)/(T_next-T_prev)
+	elif T_prev > t:
+		mean_anomaly = 2.*np.pi*t/time_period
+
+	return [mean_anomaly, T_prev, T_next]
+	
+
+	
+def mean_anomaly_old(t, time_arr, r1, r2, deltar_arr):
+
 	
 	index_t = np.amin(np.where(time_arr>=t))	
 	
@@ -109,8 +151,8 @@ def mean_anomaly(t, time_arr, r1, r2, deltar_arr):
 			 break
 	if T_prev==-1:	
 		print("*(metadata) >> Mean Anomaly: Time of previous periapsis not found. Time period will be used \n")
-	else:
-		print("*(metadata) >> Mean Anomaly: Time of previous periapsis = {} \n".format(T_prev))
+	#else:
+	#	print("*(metadata) >> Mean Anomaly: Time of previous periapsis = {} \n".format(T_prev))
 	
 	
 	while l <len(time_arr):
@@ -122,14 +164,15 @@ def mean_anomaly(t, time_arr, r1, r2, deltar_arr):
 			 
 	if T_next==-1:	
 		print("*(metadata) >> Mean Anomaly: Time of next periapsis not found \n")
-	else:	
-		print("*(metadata) >> Mean Anomaly: Time of next periapsis = {} \n".format(T_next))
+	#else:	
+	#	print("*(metadata) >> Mean Anomaly: Time of next periapsis = {} \n".format(T_next))
 
 	time_period = T_next-T_prev
 	if T_prev >-1 and T_prev<t:
 		mean_anomaly = 2.*np.pi*(t-T_prev)/(T_next-T_prev)
 	elif T_prev > t:
 		mean_anomaly = 2.*np.pi*t/time_period
+
 	return [mean_anomaly, T_prev, T_next]
 
 def import_data(dirpath):
@@ -170,12 +213,12 @@ def ecc_and_anomaly(dirpath,  jkrad_time):
 		time = time1	
 
 	
-	plt.plot(time, orbsep_mag, color = 'r',label= 'Orbital Separation')
-	plt.xlabel("Time")
-	plt.ylabel("Orbital Separation")
-	plt.legend()
-	plt.savefig(dirpath + "/Orbital_Separation.png")
-	plt.close()
+	#plt.plot(time, orbsep_mag, color = 'r',label= 'Orbital Separation')
+	#plt.xlabel("Time")
+	#plt.ylabel("Orbital Separation")
+	#plt.legend()
+	#plt.savefig(dirpath + "/figures/Orbital_Separation.png")
+	#plt.close()
 
 	x1 = r1[0]
 	y1 = r1[1]	
@@ -185,16 +228,20 @@ def ecc_and_anomaly(dirpath,  jkrad_time):
 	#Compute Mean Anomaly:
 	
 	[mean_anom, tprev, tnext] = mean_anomaly(jkrad_time, time,r1,r2, orbsep_mag)
+	[mean_anom_old, tprev_old, tnext_old] = mean_anomaly_old(jkrad_time, time,r1,r2, orbsep_mag)
+
+	#print('New Variables - mean anomaly = %g, tprev =%g, tnext = %g'%(mean_anom, tprev, tnext))
+	#print('Old Variables - mean anomaly = %g, tprev =%g, tnext = %g'%(mean_anom_old, tprev_old, tnext_old))
+
 	tprev_idx = np.where(time==tprev)
 	tnext_idx = np.where(time==tnext)[0]
-	
 	#print("*(metadata) >> Mean Anomaly = {} \n ".format( mean_anom))
 
-	plt.plot(x1[:tnext_idx], y1[:tnext_idx], color='r',label="BH1")
-	plt.plot(x2[:tnext_idx], y2[:tnext_idx], color='k',label="BH2")
-	plt.legend()
-	plt.savefig(dirpath + '/Orbit1.png')
-	plt.close()
+	#plt.plot(x1[:tnext_idx], y1[:tnext_idx], color='r',label="BH1")
+	#plt.plot(x2[:tnext_idx], y2[:tnext_idx], color='k',label="BH2")
+	#plt.legend()
+	#plt.savefig(dirpath + '/Orbit1.png')
+	#plt.close()
 	
 	#Define the cutoff index and fitting time interval (400M should be good - BBH should have 1-2 orbits)
 
@@ -223,7 +270,8 @@ def ecc_and_anomaly(dirpath,  jkrad_time):
 	plt.xlim(0,500)
 	plt.xlabel("Time")
 	plt.ylabel("Orbital Separation")
-	plt.savefig(dirpath + '/Orbitalseparation_fitting.png')
+	plt.title('Orbital Separation - Polynomial Fit')
+	plt.savefig(dirpath + '/figures/Orbitalseparation_fitting.png')
 	plt.legend()
 	plt.close()	
 
@@ -244,8 +292,9 @@ def ecc_and_anomaly(dirpath,  jkrad_time):
 	plt.plot(time_fit, eccfit_poly(time_fit), 'k--', label='Polynomial Fit') 
 	plt.xlabel("Time")
 	plt.ylabel("Eccentricity")
+	plt.title('Eccentricity polynomial fit - including junk')
 	plt.legend()
-	plt.savefig(dirpath + '/Eccentricity_fitting.png')
+	plt.savefig(dirpath + '/figures/Eccentricity_fitting.png')
 	plt.close()
 	
 	eccentricity_cutoff = eccentricity[cutoff_idx:]
@@ -255,9 +304,12 @@ def ecc_and_anomaly(dirpath,  jkrad_time):
 	plt.plot(time_cutoff, eccfit_poly(time_cutoff), 'k--', label='Polynomial Fit')
 	plt.xlabel("Time")
 	plt.ylabel("Eccentricity")
+	plt.title('Eccentricity polynomial fit - including junk')
 	plt.legend()
-	plt.savefig(dirpath + "/Eccfit_after_junk.png")
+	plt.savefig(dirpath + "/figures/Eccfit_after_junk.png")
 	plt.close()
+
+	print len(time_cutoff), len(eccfit_poly(time_cutoff))
 	
 	maxima, tmax  = func_max(time_cutoff, eccfit_poly(time_cutoff))
 	minima, tmin = func_min(time_cutoff, eccfit_poly(time_cutoff))

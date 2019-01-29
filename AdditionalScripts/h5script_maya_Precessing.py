@@ -17,6 +17,7 @@ from metadata import metadata
 from metadata_functions import output_data, error, simulation_name, find_omega22_st
 from init_data import initial_data
 import shutil as sh
+import multiprocessing as mp
 
 
 def crop_data(dirpath, time, hp, hx):
@@ -158,7 +159,7 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
     diff = np.absolute(nr_strain_data[key]['t'][amp_max_idx] - nr_strain_data[key]['t'][amp22_max_idx])
 
 	
-    if diff>10:
+    if diff>12:
         for key in nr_strain_data:
 
             if key[1]==0: 	#Ignore the m=0 modes as caution 
@@ -275,26 +276,33 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
     sh.move(outpath, movepath_h5)
 
 
+
 #wf_direc = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/Waveform_files/Remaining/Precessing/Lq_D6.2_q2.50_a0.6_th015_m140"
 h5output_path = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/H5Files" 
 wfoutput_path = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/Waveform_files/Completed"
-failed_path = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/Waveform_files/Failed/NonSpinning"
-wf_direc = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/Waveform_files/Remaining/NonSpinning"
+failed_path = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/Waveform_files/Failed/Precessing"
+wf_direc = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/Waveform_files/Remaining/Precessing"
 
 if not os.path.exists(failed_path): os.makedirs(failed_path)
 if not os.path.exists(wfoutput_path): os.makedirs(wfoutput_path)
 
-#create_single_h5(wf_direc, h5output_path, wfoutput_path, verbose=True)
+#def create_h5_parallel(waveform_directory):
+#    print("\n(h5script_Maya)* >> Starting the python script to create h5 files for waveform - {} \n".format(os.path.basename(waveform_directory)))
+#    create_single_h5(waveform_directory, h5output_path, wfoutput_path, verbose=True)
+#
+#pool = mp.Pool(processes = 4)
+#direc_paths = glob.glob(os.path.join(wf_direc,'*'))
+#results = pool.map(create_h5_parallel, direc_paths)
 
 for direc in os.listdir(wf_direc):
     direc_path = os.path.join(wf_direc,direc)
     if os.path.isdir(direc_path):
         print("\n(h5script_Maya)* >> Starting the python script to create h5 files for waveform - {} \n".format(direc))
-#       try:
+        #try:
         create_single_h5(direc_path, h5output_path, wfoutput_path, verbose=True)
-#       except (ValueError, NameError) as error :	#Remove except condition if testing Failed waveforms
-#           print("An Error occured. The file is being moved to Failed Directory")
-#           sh.move(direc_path, failed_path )
-#       except (sh.Error) as error :	#Remove except condition if testing Failed waveforms
-#           print("An Error occured. The file is being moved to Failed Directory")
-#           sh.move(direc_path, failed_path )
+       # except (ValueError, NameError) as error :	#Remove except condition if testing Failed waveforms
+       #     print("An Error occured. The file is being moved to Failed Directory")
+       #     sh.move(direc_path, failed_path )
+       # except (sh.Error) as error :	#Remove except condition if testing Failed waveforms
+       #     print("An Error occured. The file is being moved to Failed Directory")
+       #     sh.move(direc_path, failed_path )

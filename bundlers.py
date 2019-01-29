@@ -5,7 +5,7 @@ By Lionel London (lionel.london@ligo.org)
 '''
 
 
-def nr2h5( nr_strain_data, nr_meta_data, nr_init_data, output_path=None, verbose=False ):
+def nr2h5( nr_strain_data, nr_meta_data, nr_init_data, output_path=None, wfdir_path=None, verbose=False , testsuite=False):
     '''
     Example formatting for inputs:
     nr_strain_data = { ... (2,2):{'amp':strain_amplitude_array,'phase':strain_phase_array,'t':time_series}, (2,1): ... }
@@ -17,17 +17,20 @@ def nr2h5( nr_strain_data, nr_meta_data, nr_init_data, output_path=None, verbose
     # import useful things
     from os import system, remove, makedirs, path
     import shutil
-    from os.path import dirname, basename, isdir, realpath
+    from os.path import dirname, basename, isdir, realpath, join
     from numpy import array,ones,pi,loadtxt,hstack
     from numpy.linalg import norm
     from os.path import expanduser
-    from numpy import array, diff
+    from numpy import array, diff, sort, random
 
-    import sys
-    sys.path.append("/nethome/bkhamesra3/Desktop/LIGO-Strain/Strain_Scripts")  #Path to romspline directory
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    import sys, os
+    #sys.path.append("/nethome/bkhamesra3/Desktop/LIGO-Strain/Strain_Scripts")  #Path to romspline directory
     import romspline
     import h5py
-
+    import random
     #
     def alert(msg,base):
         if verbose:
@@ -44,7 +47,7 @@ def nr2h5( nr_strain_data, nr_meta_data, nr_init_data, output_path=None, verbose
 
 
     # ---- Define useful things for input checking & file handling ---- #
-    # Make "mkdir" function for directories
+# Make "mkdir" function for directories
     def mkdir(dir):
         # Check for directory existence; make if needed.
         if not path.exists(dir):
@@ -102,7 +105,7 @@ def nr2h5( nr_strain_data, nr_meta_data, nr_init_data, output_path=None, verbose
             raise ValueError( msg )
     # ----------------------------------------------------------------- #
 
-
+    #Check if the metadata matches the format as in lvcnr scripts
 
     # ----------------------------------------------------------------- #
     # Output directory of hdf5 file
@@ -166,6 +169,46 @@ def nr2h5( nr_strain_data, nr_meta_data, nr_init_data, output_path=None, verbose
         # Create romspline object of multipole phase data
         phase_tmp = tmp_dir + 'phase_l%im%i.h5' % lm
         write_spline( phase_tmp, time_data, nr_strain_data[(l,m)]['phase'] )
+
+	################################################################################################################
+	##Test - Compare the amplitude and phase after spline interpolation with the original data for (2,2) mode
+	################################################################################################################
+       
+	
+	if testsuite==True:
+	    s = romspline.ReducedOrderSpline()
+	    if wfdir_path=="None": raise ValueError("Directory path not specified")	
+	    
+	    strfile = wfdir_path+ "/data/Strain/Strain_TimeShifted/Strain_{}{}_timeshift.asc".format(l,m)
+	    if not os.path.exists(strfile): raise RuntimeError("Strain data not found. Please check the file")
+	    tlm, amp_lm, phase_lm = loadtxt(strfile, usecols=(0,1,2), unpack=True)
+
+	    tt_spline = sort([random.uniform(tlm.min(), tlm.max()) for ii in range(10000)])
+
+	    s.read(phase_tmp)
+	    phi_spline = s.eval(tt_spline)
+
+	    s.read(amp_tmp)
+	    amp_spline = s.eval(tt_spline)
+
+	    plt.figure()
+	    plt.subplot(121)
+	    plt.plot(tlm, amp_lm, label='Original Data')
+	    plt.plot(tt_spline, amp_spline, ls='--', label='Spline Interpolant')
+	    plt.xlabel('Time')
+	    plt.ylabel('Amplitude')
+	    plt.legend()
+	
+	    plt.subplot(122)
+	    plt.plot(tlm, phase_lm, label='Original Data')
+	    plt.plot(tt_spline, phi_spline, ls='--', label='Spline Interpolant')
+	    plt.xlabel('Time')
+	    plt.ylabel('Phase')
+	    plt.legend()
+	    plt.tight_layout()
+	    plt.savefig(wfdir_path+'/figures/AmpPhase_{}{}_Comparison.png'.format(l,m), dpi=500)
+	    plt.close()
+
 
         # Open the temporary h5 file, and then copy its high level group contents to the main h5 file under the appropriate group
         tmp_amp_h5 = h5py.File( amp_tmp )

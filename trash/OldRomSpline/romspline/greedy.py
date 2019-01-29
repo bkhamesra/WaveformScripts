@@ -108,7 +108,7 @@ class ReducedOrderSpline(object):
     self.size = len(self.indices)
     self.compression = float(len(y))/self.size
     self._made = True
-  
+
   
   def __call__(self, x, dx=0):
     """Evaluate reduced-order spline or its dx derviatives at x
@@ -534,8 +534,11 @@ def _seed(x, deg=5, seeds=None):
   return np.array(indices, dtype='int'), errors
 
 
-def _greedy(x, y, tol=1e-6, rel=False, deg=5, verbose=False, seeds=None):
+#def _greedy(x, y, tol=1e-6, rel=False, deg=5, verbose=False, seeds=None):
+#modified
+def _greedy(x, y, tol=1e-6, rel=False, deg=4, verbose=False, seeds=None):
   """Greedy algorithm for building a reduced-order spline"""
+
   if verbose:
     print "\nSize", "\t", "Error"
     print "="*13
@@ -550,7 +553,7 @@ def _greedy(x, y, tol=1e-6, rel=False, deg=5, verbose=False, seeds=None):
   # Seed greedy algorithm
   indices, errors = _seed(x, deg=deg, seeds=seeds)
   args = indices[:]  # Keep track of unsorted indices
-  
+ 
   # Greedy algorithm
   flag, ctr = 0, len(indices)+1
   while flag == 0 and ctr < len(x):	

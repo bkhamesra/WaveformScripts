@@ -73,6 +73,7 @@ def func_max(time, data):
 		return [maxima, tmax]
 	except NameError:
 		print("*(metadata) >>  Maxima: no maxima found \n")
+                raise NameError()
 			
 def func_min(time, data):
 	der = np.divide((data[1:] - data[:-1]), (time[1:] - time[:-1]))

@@ -60,14 +60,17 @@ def find_cutoff(sim_path):
 
     difference = abs(interp_gw - interp_orbital) 
     print(times[0:59])
-    i = 50
-    while(True):
+    cutoff = 0
+
+    for i in range(50,len(difference)):
+#    while(True):
 #        print(i)
 #        print(difference[i-50:i+50])
         if(all([x < 0.0015 for x in difference[i-50:i+50]])):
+            cutoff = i
             break;
-        i+=1
-    return times[i]
+#        i+=1
+    return times[cutoff]
 
 start_times = []
 waveform_names = []
@@ -75,17 +78,22 @@ waveform_names = []
 #path = "/numrel/NumRel/dferguson41/phys44236/localdata2/TEST_OUTPUT/input_dir/AlignedSpin"
 path_aligned = "/numrel/NumRel/dferguson41/GENERATING_CATALOG/ascii_data/Remaining/AlignedSpin"
 path_nonspinning = "/numrel/NumRel/dferguson41/GENERATING_CATALOG/ascii_data/Remaining/NonSpinning"
+path_precessing = "/numrel/NumRel/dferguson41/GENERATING_CATALOG/ascii_data/Remaining/Precessing"
 #locations= ["D11_a0.2_q1.00_m103_As"]
 
-output_file = "Deb_wf_junkrad_after_strain.txt"
+output_file = "Deb_wf_junkrad_after_strain_precessing.txt"
 with open(output_file, 'w') as f:
     f.write("Tags \t Time of Junk \n")
-    for location in os.listdir(path_aligned):
+#    for location in os.listdir(path_aligned):
+#        tag = location
+#        time_junk = find_cutoff(path_aligned+"/"+location) 
+#        f.write(tag + "\t" + str(time_junk) +"\n")
+#    for location in os.listdir(path_nonspinning):
+#        tag = location
+#        time_junk = find_cutoff(path_nonspinning+"/"+location) 
+#        f.write(tag + "\t" + str(time_junk) +"\n")
+    for location in os.listdir(path_precessing):
         tag = location
-        time_junk = find_cutoff(path_aligned+"/"+location) 
-        f.write(tag + "\t" + str(time_junk) +"\n")
-    for location in os.listdir(path_nonspinning):
-        tag = location
-        time_junk = find_cutoff(path_nonspinning+"/"+location) 
+        time_junk = find_cutoff(path_precessing+"/"+location) 
         f.write(tag + "\t" + str(time_junk) +"\n")
         

@@ -9,7 +9,7 @@ with open('wf_junkrad.txt','r') as f:
 ids = []
 tags = []
 times = []
-with open('Deb_wf_junkrad_after_strain.txt','r') as f: 
+with open('Deb_wf_junkrad_after_strain_precessing.txt','r') as f: 
     for line in f:
         if '#' not in line:
             splitvals = line.split()
@@ -20,7 +20,7 @@ with open('Deb_wf_junkrad_after_strain.txt','r') as f:
             tags.append(tag)
             times.append(time)
 
-with open('wf_junkrad_new.txt','w') as f:
+with open('wf_junkrad_new_precessing.txt','w') as f:
     f.write("ID \t Tag \t Time  \n")
     for i in range(len(ids)):
         f.write( str(ids[i])+"\t"+str(tags[i])+"\t"+str(times[i])+"\n")

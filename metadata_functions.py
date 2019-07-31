@@ -41,9 +41,9 @@ def simulation_name(dirpath):
 	
 	file_name = dirpath.split('/')[-1]
 	wf_junkrad = "wf_junkrad_new.txt"		#'/localdata/bkhamesra3/research_localdata/UsefulScripts/LIGO/LIGO_Scripts/LIGO_Metadata/LIGO_Scripts/wf_junkrad.txt'
-    
 	wfdata = np.genfromtxt(wf_junkrad, dtype=None, comments='#', usecols=(0,1), skip_header=1, delimiter = '\t', names = ('GTID', 'simname'))
-    	GTname, wfname = wfdata['GTID'], wfdata['simname']
+    	
+        GTname, wfname = wfdata['GTID'], wfdata['simname']
 
 	if np.array(np.where(wfname==file_name)).size==0:
 		error('*(metadata) >> GT simulation name incorrectly listed in wf_junkrad.txt. Please check the file.')

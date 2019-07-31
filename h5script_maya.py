@@ -23,7 +23,7 @@ def crop_data(dirpath, time, hp, hx):
  
     #Read the time duration of junk radiation  from wf_junkrad.txt
     sim_name = dirpath.split('/')[-1]
-    wf_junkrad = 'wf_junkrad_new.txt'
+    wf_junkrad = 'wf_junkrad.txt'
     
     wfdata = np.genfromtxt(wf_junkrad, dtype=None, comments='#', usecols=(1,2), skip_header=1, delimiter = '\t', names = ('simname', 'time'))
     

@@ -121,7 +121,7 @@ def metadata(dirpath, jkrad_time, Error_Series = False, verbose=False):
 	a2x = s2[0]/horizonmass_minus**2
 	a2y = s2[1]/horizonmass_minus**2
 	a2z = s2[2]/horizonmass_minus**2
-	a2 = np.array((a2x, a2y, a2z))
+        a2 = np.array((a2x, a2y, a2z))
 
 	assert(mag(a1)<=1), "Error: |a1| = %g. Dimensionless spin magnitude cannot be greater than 1!"%mag(a1)
 	assert(mag(a2)<=1), "Error: |a2| = %g. Dimensionless spin magnitude cannot be greater than 1!"%mag(a2)

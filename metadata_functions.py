@@ -142,9 +142,7 @@ def updatespins(dirpath, retarted_junktime, spin1, spin2, verbose=True):
 			if verbose: print("*(Metadata) >> At time = {}, Spin1 = ({}, {}, {}) and Spin2 = ({}, {}, {}) using ihspins. \n".format(time_cutoff, s1[0], s1[1], s1[2], s2[0], s2[1], s2[2]))
 
 
-######PUT THIS BACK!!!!!!#######
-                else:
-#		elif not(simtype=='precessing'):
+		elif not(simtype=='precessing'):
 
 
 			time_cutoff = time1_spin[-1]			
@@ -154,8 +152,8 @@ def updatespins(dirpath, retarted_junktime, spin1, spin2, verbose=True):
 			
 			if verbose: print("*(Metadata) >> Warning: Spin Information not available in after retarted junktime. Last available information will be taken from ihspin files\n")
 			if verbose: print("*(Metadata) >> At time = {}, Spin1 = ({}, {}, {}) and Spin2 = ({}, {}, {}) using ihspins. \n".format(time_cutoff, s1[0], s1[1], s1[2], s2[0], s2[1], s2[2]))
-#		else:
-#			raise ValueError('Spin Information not available for %s simulation. Metadata cannot be generated \n'%simulation_name(dirpath))
+		else:
+			raise ValueError('Spin Information not available for %s simulation. Metadata cannot be generated \n'%simulation_name(dirpath))
 
 		return [s1,s2,time_cutoff]
 	else:	

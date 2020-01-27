@@ -283,10 +283,10 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
     
 
 #wf_direc = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/Waveform_files/Remaining/Precessing/Lq_D6.2_q2.50_a0.6_th015_m140"
-h5output_path = "/numrel/NumRel/dferguson41/GENERATING_CATALOG/H5Files" 
-wfoutput_path = "/numrel/NumRel/dferguson41/GENERATING_CATALOG/ascii_data/Completed"
-failed_path = "/numrel/NumRel/dferguson41/GENERATING_CATALOG/ascii_data/Failed/Precessing"
-wf_direc = "/numrel/NumRel/dferguson41/GENERATING_CATALOG/ascii_data/Remaining/Precessing"
+h5output_path = "/numrel/NumRel/Catalog/all_H5files" 
+wfoutput_path = "/numrel/NumRel/WaveformData/CatalogWaveformData/Completed"
+failed_path = "/numrel/NumRel/WaveformData/CatalogWaveformData/Failed"
+wf_direc = "/numrel/NumRel/WaveformData/CatalogWaveformData/Remaining/test"
 
 if not os.path.exists(failed_path): os.makedirs(failed_path)
 if not os.path.exists(wfoutput_path): os.makedirs(wfoutput_path)

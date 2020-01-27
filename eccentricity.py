@@ -54,7 +54,6 @@ def func_fit(function,time, data):
 	
 def func_max(time, data):
 
-	print np.amax(data), np.argmax(data), len(data)
 	der = np.divide((data[1:] - data[:-1]), (time[1:] - time[:-1]))
 	i=1
 	while i<len(der):
@@ -247,7 +246,10 @@ def ecc_and_anomaly(dirpath,  jkrad_time):
 	#Define the cutoff index and fitting time interval (400M should be good - BBH should have 1-2 orbits)
 
 	cutoff_idx = np.amin(np.amin(np.where(time>=jkrad_time)))
-	timeidx_400 = np.amin(np.where(time>=400))
+	
+        timeidx_400 = -1
+        if(time[-1]>400):
+                timeidx_400 = np.amin(np.where(time>=400))
 
 
 	time_fit = time[0:timeidx_400]
@@ -312,9 +314,18 @@ def ecc_and_anomaly(dirpath,  jkrad_time):
 
 	print len(time_cutoff), len(eccfit_poly(time_cutoff))
 	
-	maxima, tmax  = func_max(time_cutoff, eccfit_poly(time_cutoff))
-	minima, tmin = func_min(time_cutoff, eccfit_poly(time_cutoff))
+	#maxima, tmax  = func_max(time_cutoff, eccfit_poly(time_cutoff))
+	#minima, tmin = func_min(time_cutoff, eccfit_poly(time_cutoff))
 	
+        ecc_data = eccfit_poly(time_cutoff)
+        max_iter = np.argmax(ecc_data)
+        min_iter = np.argmin(ecc_data)
+        maxima = ecc_data[max_iter]
+        tmax = time_cutoff[max_iter]
+        minima = ecc_data[min_iter]
+        tmin = time_cutoff[min_iter]
+
+
 	#print("*(metadata) >> Eccentricity: max = {} found at time = {} and min = {} found at time = {} \n".format(maxima, tmax, minima, tmin))
 	
 	ecc_init = (abs(maxima) + abs(minima))/2.

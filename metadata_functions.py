@@ -372,3 +372,24 @@ def determine_production_run(dirpath):
 	print('*(Metadata) >> %s: Separation of this run = %g and resolution =M/%g, hence the production run status = %g'%(simulation_name(dirpath), separation, resolution, produc_run))
 
 	return produc_run
+
+def get_mass_from_stdout(dirpath):
+        filename = dirpath+"/data/stdout"
+        if not os.path.isfile(filename):
+                filename = dirpath+"/data/stdout-1"
+        if not os.path.isfile(filename):
+                raise
+        adm_mass_p = 0
+        adm_mass_m = 0
+        with open(filename) as f:
+                line = f.readline()
+                while line:
+                        if('ADM mass from r= 1000000' in line):
+                                adm_mass_p = float(f.readline().split('=')[-1])
+                                adm_mass_m = float(f.readline().split('=')[-1])
+                                break
+                        line  = f.readline()
+        if(adm_mass_p == 0 or adm_mass_m == 0):
+                raise
+        else:
+                return adm_mass_p, adm_mass_m

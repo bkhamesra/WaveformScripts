@@ -200,8 +200,8 @@ def metadata(dirpath, jkrad_time, Error_Series = False, verbose=False):
 	nr_metadata['object1'] = 'BH'
 	nr_metadata['object2'] = 'BH'
 	nr_metadata['init_sep'] = init_sep
-	nr_metadata['mass1'] = round(m_plus, 8)
-	nr_metadata['mass2'] = round(m_minus, 8)
+	nr_metadata['mass1'] = round(horizonmass_plus, 8)
+	nr_metadata['mass2'] = round(horizonmass_minus, 8)
 	nr_metadata['eta'] = round(eta, 8)
 	nr_metadata['spin1x'] = round(a1x, 8)
 	nr_metadata['spin1y'] = round(a1y, 8)

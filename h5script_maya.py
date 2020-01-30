@@ -25,7 +25,7 @@ def crop_data(dirpath, time, hp, hx):
     sim_name = dirpath.split('/')[-1]
     wf_junkrad = 'wf_junkrad.txt'
     
-    wfdata = np.genfromtxt(wf_junkrad, dtype=None, comments='#', usecols=(1,4), skip_header=1, delimiter = '\t', names = ('simname', 'time'))
+    wfdata = np.genfromtxt(wf_junkrad, dtype=None, comments='#', usecols=(1,2), skip_header=1, delimiter = '\t', names = ('simname', 'time'))
     
     wfname, jkrad_time = wfdata['simname'], wfdata['time']
     
@@ -77,7 +77,6 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
     figdir = os.path.join(dirpath, "figures")
     datadir = os.path.join(dirpath, "data")
     strdir = os.path.join(datadir, "Strain")
-
     #Check if the h5 file already exists
     simname = simulation_name(dirpath)
     h5check_path = glob.glob(os.path.join(movepath_h5, "*/%s.h5"%simname))
@@ -148,15 +147,22 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
 
     for key in nr_strain_data:
         amp_sq = amp_sq + nr_strain_data[key]['amp']**2 
+
+    if(np.all(amp_sq == 0)):
+        raise ValueError("*(Create_Single_h5) >> %s waveform is all zeros. Waveform getting moved to Failed Directory"%simname)
 	
     amp_max_idx = np.where(amp_sq==np.amax(amp_sq))
     amp22_max_idx = np.where(nr_strain_data[(2,2)]['amp']==np.amax(nr_strain_data[(2,2)]['amp']))
-
 	
+#    if(len(amp22_max_idx[0]) > 1):
+#        amp22_max_idx = amp22_max_idx[0][0]
+#    if(len(amp_max_idx[0]) > 1):
+#        amp_max_idx = amp_max_idx[0][0]
     # Check for difference between peak of amplitude-all modes,  and peak of 2,2 mode amplitude
     
-    diff = np.absolute(nr_strain_data[key]['t'][amp_max_idx] - nr_strain_data[key]['t'][amp22_max_idx])
-
+    #diff = np.absolute(nr_strain_data[key]['t'][amp_max_idx] - nr_strain_data[key]['t'][amp22_max_idx])
+    
+    diff = np.absolute(nr_strain_data[(2,2)]['t'][amp_max_idx] - nr_strain_data[(2,2)]['t'][amp22_max_idx])
 	
     if diff>10:
         for key in nr_strain_data:
@@ -271,15 +277,16 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
         movepath_h5 = os.path.join(movepath_h5, 'Precessing')
         movepath_wf = os.path.join(movepath_wf, 'Precessing')
 
+    print(movepath_h5)
     sh.move(dirpath, movepath_wf)
     sh.move(outpath, movepath_h5)
-
+    
 
 #wf_direc = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/Waveform_files/Remaining/Precessing/Lq_D6.2_q2.50_a0.6_th015_m140"
-h5output_path = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/H5Files" 
-wfoutput_path = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/Waveform_files/Completed"
-failed_path = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/Waveform_files/Failed/NonSpinning"
-wf_direc = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/Waveform_files/Remaining/NonSpinning"
+h5output_path = "/numrel/NumRel/Catalog/all_H5files" 
+wfoutput_path = "/numrel/NumRel/WaveformData/CatalogWaveformData/Completed"
+failed_path = "/numrel/NumRel/WaveformData/CatalogWaveformData/Failed"
+wf_direc = "/numrel/NumRel/WaveformData/CatalogWaveformData/Remaining/test"
 
 if not os.path.exists(failed_path): os.makedirs(failed_path)
 if not os.path.exists(wfoutput_path): os.makedirs(wfoutput_path)
@@ -290,11 +297,13 @@ for direc in os.listdir(wf_direc):
     direc_path = os.path.join(wf_direc,direc)
     if os.path.isdir(direc_path):
         print("\n(h5script_Maya)* >> Starting the python script to create h5 files for waveform - {} \n".format(direc))
-#       try:
-        create_single_h5(direc_path, h5output_path, wfoutput_path, verbose=True)
-#       except (ValueError, NameError) as error :	#Remove except condition if testing Failed waveforms
-#           print("An Error occured. The file is being moved to Failed Directory")
-#           sh.move(direc_path, failed_path )
-#       except (sh.Error) as error :	#Remove except condition if testing Failed waveforms
-#           print("An Error occured. The file is being moved to Failed Directory")
-#           sh.move(direc_path, failed_path )
+        try:
+            create_single_h5(direc_path, h5output_path, wfoutput_path, verbose=True)
+        except (ValueError, NameError, AssertionError) as error :	#Remove except condition if testing Failed waveforms
+            print(error)
+            print("An Error occured. The file is being moved to Failed Directory")
+            sh.move(direc_path, failed_path )
+        except (sh.Error) as error :	#Remove except condition if testing Failed waveforms
+            print(error)
+            print("An Error occured. The file is being moved to Failed Directory")
+            sh.move(direc_path, failed_path )

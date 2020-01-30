@@ -41,9 +41,9 @@ def simulation_name(dirpath):
 	
 	file_name = dirpath.split('/')[-1]
 	wf_junkrad = "wf_junkrad.txt"		#'/localdata/bkhamesra3/research_localdata/UsefulScripts/LIGO/LIGO_Scripts/LIGO_Metadata/LIGO_Scripts/wf_junkrad.txt'
-    
-	wfdata = np.genfromtxt(wf_junkrad, dtype=None, comments='#', usecols=(0,1), skip_header=1, delimiter = '\t', names = ('GTID', 'simname'))
-    	GTname, wfname = wfdata['GTID'], wfdata['simname']
+	wfdata = np.genfromtxt(wf_junkrad, dtype=None, comments='#', usecols=(0,1), delimiter = '\t', names = ('GTID', 'simname'))
+    	
+        GTname, wfname = wfdata['GTID'], wfdata['simname']
 
 	if np.array(np.where(wfname==file_name)).size==0:
 		error('*(metadata) >> GT simulation name incorrectly listed in wf_junkrad.txt. Please check the file.')
@@ -141,7 +141,9 @@ def updatespins(dirpath, retarted_junktime, spin1, spin2, verbose=True):
 
 			if verbose: print("*(Metadata) >> At time = {}, Spin1 = ({}, {}, {}) and Spin2 = ({}, {}, {}) using ihspins. \n".format(time_cutoff, s1[0], s1[1], s1[2], s2[0], s2[1], s2[2]))
 
+
 		elif not(simtype=='precessing'):
+
 
 			time_cutoff = time1_spin[-1]			
 
@@ -370,3 +372,24 @@ def determine_production_run(dirpath):
 	print('*(Metadata) >> %s: Separation of this run = %g and resolution =M/%g, hence the production run status = %g'%(simulation_name(dirpath), separation, resolution, produc_run))
 
 	return produc_run
+
+def get_mass_from_stdout(dirpath):
+        filename = dirpath+"/data/stdout"
+        if not os.path.isfile(filename):
+                filename = dirpath+"/data/stdout-1"
+        if not os.path.isfile(filename):
+                raise
+        adm_mass_p = 0
+        adm_mass_m = 0
+        with open(filename) as f:
+                line = f.readline()
+                while line:
+                        if('ADM mass from r= 1000000' in line):
+                                adm_mass_p = float(f.readline().split('=')[-1])
+                                adm_mass_m = float(f.readline().split('=')[-1])
+                                break
+                        line  = f.readline()
+        if(adm_mass_p == 0 or adm_mass_m == 0):
+                raise
+        else:
+                return adm_mass_p, adm_mass_m

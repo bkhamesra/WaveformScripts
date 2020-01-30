@@ -73,9 +73,17 @@ def metadata(dirpath, jkrad_time, Error_Series = False, verbose=False):
 
 
 	# Update Mass - 
-	m1, m2, mass_cutofftime = updatemass(dirpath, retarted_junktime, verbose=verbose)
-	m_plus = m1
-	m_minus = m2
+        hass_irr_mass = False
+        m_plus = 0
+        m_minus = 0
+        mass_cutofftime = 0
+        try:
+                m1, m2, mass_cutofftime = updatemass(dirpath, retarted_junktime, verbose=verbose)
+                m_plus = m1
+                m_minus = m2
+                hass_irr_mass = True
+        except:
+                print("Does not have mass from BH diagnostics. Will need to get horizon mass from stdout files.")
 	
 	
 	#Orbital Frequency - 
@@ -91,37 +99,55 @@ def metadata(dirpath, jkrad_time, Error_Series = False, verbose=False):
 	nhat = 	delta_r/init_sep
 
 	assert(np.around(mag(nhat), decimals=3)==1.), "Error: Norm of nhat vector = %g (not normalized)"%mag(nhat)	
-
-	#Mass Ratio
-	q = m_plus/m_minus
-	eta = m_plus*m_minus/(m_plus + m_minus)**2.
-	
-	#Newtonian Orbital Angular Momentum Unit Vector
-	p1 = m_plus*v1		
-	p2 = m_minus*v2
-	
-	orb_angmom = np.cross(r1,p1) + np.cross(r2,p2)
-	Lhat = orb_angmom/np.linalg.norm(orb_angmom)
-	assert(np.around(mag(Lhat), decimals=3)==1.), "Error: Norm of Lhat vector = %g (not normalized)"%mag(Lhat)	
 	
 	#Horizon Mass
 	s1_mag = np.sqrt(s1[0]**2 + s1[1]**2 + s1[2]**2)
 	s2_mag = np.sqrt(s2[0]**2 + s2[1]**2 + s2[2]**2)
 
-	horizonmass_plus = np.sqrt(m_plus**2 + 0.25*s1_mag**2/m_plus**2)
-	horizonmass_minus = np.sqrt(m_minus**2 + 0.25*s1_mag**2/m_minus**2)
+        horizonmass_plus = 0
+        horizonmass_minus = 0
+        if(hass_irr_mass):
+                horizonmass_plus = np.sqrt(m_plus**2 + 0.25*s1_mag**2/m_plus**2)
+                horizonmass_minus = np.sqrt(m_minus**2 + 0.25*s2_mag**2/m_minus**2)
+        else: #Use stdout file to get horizon mass
+                horizonmass_plus, horizonmass_minus = get_mass_from_stdout(dirpath)
+                
+        #Mass Ratio
+	q = horizonmass_plus/horizonmass_minus
+	eta = horizonmass_plus*horizonmass_minus/(horizonmass_plus + horizonmass_minus)**2.
+	
+	#Newtonian Orbital Angular Momentum Unit Vector
+	p1 = horizonmass_plus*v1		
+	p2 = horizonmass_minus*v2
+	
+	orb_angmom = np.cross(r1,p1) + np.cross(r2,p2)
+	Lhat = orb_angmom/np.linalg.norm(orb_angmom)
+	assert(np.around(mag(Lhat), decimals=3)==1.), "Error: Norm of Lhat vector = %g (not normalized)"%mag(Lhat)	
+
 
 
 	#Dimensionless Spins
 	a1x = s1[0]/horizonmass_plus**2
+        if(abs(a1x)<0.0001):
+                a1x = 0
 	a1y = s1[1]/horizonmass_plus**2
-	a1z = s1[2]/horizonmass_plus**2
+	if(abs(a1y)<0.0001):
+                a1y = 0
+        a1z = s1[2]/horizonmass_plus**2
+        if(abs(a1z)<0.0001):
+                a1z = 0
 	a1 = np.array((a1x, a1y, a1z))
 
 	a2x = s2[0]/horizonmass_minus**2
+        if(abs(a2x)<0.0001):
+                a2x = 0
 	a2y = s2[1]/horizonmass_minus**2
+        if(abs(a2y)<0.0001):
+                a2y = 0
 	a2z = s2[2]/horizonmass_minus**2
-	a2 = np.array((a2x, a2y, a2z))
+        if(abs(a2z)<0.0001):
+                a2z = 0
+        a2 = np.array((a2x, a2y, a2z))
 
 	assert(mag(a1)<=1), "Error: |a1| = %g. Dimensionless spin magnitude cannot be greater than 1!"%mag(a1)
 	assert(mag(a2)<=1), "Error: |a2| = %g. Dimensionless spin magnitude cannot be greater than 1!"%mag(a2)
@@ -174,8 +200,8 @@ def metadata(dirpath, jkrad_time, Error_Series = False, verbose=False):
 	nr_metadata['object1'] = 'BH'
 	nr_metadata['object2'] = 'BH'
 	nr_metadata['init_sep'] = init_sep
-	nr_metadata['mass1'] = round(m_plus, 8)
-	nr_metadata['mass2'] = round(m_minus, 8)
+	nr_metadata['mass1'] = round(horizonmass_plus, 8)
+	nr_metadata['mass2'] = round(horizonmass_minus, 8)
 	nr_metadata['eta'] = round(eta, 8)
 	nr_metadata['spin1x'] = round(a1x, 8)
 	nr_metadata['spin1y'] = round(a1y, 8)

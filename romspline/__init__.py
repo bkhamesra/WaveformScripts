@@ -67,7 +67,7 @@ class _ImportStates(object):
     # Try importing numpy module
     try:
       import numpy as np
-    except:
+    except Exception as e:
       # Raise an exception if numpy can't be imported
       raise Exception, "Error: Cannot import `NumPy` module."
     

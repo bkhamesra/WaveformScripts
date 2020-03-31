@@ -98,6 +98,8 @@ def metadata(dirpath, jkrad_time, Error_Series = False, verbose=False):
 	init_sep = np.linalg.norm(delta_r)
 	nhat = 	delta_r/init_sep
 
+        assert init_sep>=7, "Initial Separation is %f which is less than 7. This should not go in lvcnr catalog."%init_sep
+
 	assert(np.around(mag(nhat), decimals=3)==1.), "Error: Norm of nhat vector = %g (not normalized)"%mag(nhat)	
 	
 	#Horizon Mass
@@ -128,24 +130,24 @@ def metadata(dirpath, jkrad_time, Error_Series = False, verbose=False):
 
 	#Dimensionless Spins
 	a1x = s1[0]/horizonmass_plus**2
-        if(abs(a1x)<0.0001):
+        if(abs(a1x)<0.0005):
                 a1x = 0
 	a1y = s1[1]/horizonmass_plus**2
-	if(abs(a1y)<0.0001):
+	if(abs(a1y)<0.0005):
                 a1y = 0
         a1z = s1[2]/horizonmass_plus**2
-        if(abs(a1z)<0.0001):
+        if(abs(a1z)<0.0005):
                 a1z = 0
 	a1 = np.array((a1x, a1y, a1z))
 
 	a2x = s2[0]/horizonmass_minus**2
-        if(abs(a2x)<0.0001):
+        if(abs(a2x)<0.0005):
                 a2x = 0
 	a2y = s2[1]/horizonmass_minus**2
-        if(abs(a2y)<0.0001):
+        if(abs(a2y)<0.0005):
                 a2y = 0
 	a2z = s2[2]/horizonmass_minus**2
-        if(abs(a2z)<0.0001):
+        if(abs(a2z)<0.0005):
                 a2z = 0
         a2 = np.array((a2x, a2y, a2z))
 
@@ -200,8 +202,8 @@ def metadata(dirpath, jkrad_time, Error_Series = False, verbose=False):
 	nr_metadata['object1'] = 'BH'
 	nr_metadata['object2'] = 'BH'
 	nr_metadata['init_sep'] = init_sep
-	nr_metadata['mass1'] = round(horizonmass_plus, 8)
-	nr_metadata['mass2'] = round(horizonmass_minus, 8)
+	nr_metadata['mass1'] = round(horizonmass_plus, 3)
+	nr_metadata['mass2'] = round(horizonmass_minus, 3)
 	nr_metadata['eta'] = round(eta, 8)
 	nr_metadata['spin1x'] = round(a1x, 8)
 	nr_metadata['spin1y'] = round(a1y, 8)

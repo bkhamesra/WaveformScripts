@@ -28,8 +28,7 @@ def crop_data(dirpath, time, hp, hx):
     wfdata = np.genfromtxt(wf_junkrad, dtype=None, comments='#', usecols=(1,2), skip_header=1, delimiter = '\t', names = ('simname', 'time'))
     
     wfname, jkrad_time = wfdata['simname'], wfdata['time']
-    
-    
+
     #Find the index where to crop off the data
     
     if np.array(np.where(wfname==sim_name)).size==0:
@@ -162,28 +161,28 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
     
     #diff = np.absolute(nr_strain_data[key]['t'][amp_max_idx] - nr_strain_data[key]['t'][amp22_max_idx])
     
-    diff = np.absolute(nr_strain_data[(2,2)]['t'][amp_max_idx] - nr_strain_data[(2,2)]['t'][amp22_max_idx])
-	
-    if diff>10:
-        for key in nr_strain_data:
-
-            if key[1]==0: 	#Ignore the m=0 modes as caution 
-                continue
-        
-            amp_lm, t_lm = nr_strain_data[key]['amp'], nr_strain_data[key]['t']
-            maxampidx_lm = np.argmax(amp_lm)
-            t_maxamp_lm = t_lm[maxampidx_lm]
-        	
-            tdiff_lm = t_lm[maxampidx_lm] - t_lm[amp22_max_idx]	
-            ampdiff_lm = (np.amax(nr_strain_data[(2,2)]['amp']) - np.amax(amp_lm)) /np.amax(nr_strain_data[(2,2)]['amp'])*100
-        
-            if ((tdiff_lm > 10.0) and (ampdiff_lm<0.1)):
-                print("(%d, %d): t_22 = %g, t_lm = %g, diff = %g, maxamp_22 = %g, maxamp_lm = %g \n"%(key[0], key[1], t_lm[amp22_max_idx], t_lm[maxampidx_lm], tdiff_lm, nr_strain_data[(2,2)]['amp'][amp22_max_idx], np.amax(amp_lm)))
-        
-        
-        raise NameError('*(Create_single_h5) >>  Unexpected difference of %gM observed between time of peak of 22 mode and time of peak of strain amplitude (all modes). Some mode is behaving incorrectly'%diff)
-    elif verbose:
-        print("*(Create_single_h5) >> Time difference between peak of strain amplitude and (2,2) mode amplitude is %gM \n"%(diff))
+#    diff = np.absolute(nr_strain_data[(2,2)]['t'][amp_max_idx] - nr_strain_data[(2,2)]['t'][amp22_max_idx])
+#	
+#    if diff>10:
+#        for key in nr_strain_data:
+#
+#            if key[1]==0: 	#Ignore the m=0 modes as caution 
+#                continue
+#        
+#            amp_lm, t_lm = nr_strain_data[key]['amp'], nr_strain_data[key]['t']
+#            maxampidx_lm = np.argmax(amp_lm)
+#            t_maxamp_lm = t_lm[maxampidx_lm]
+#        	
+#            tdiff_lm = t_lm[maxampidx_lm] - t_lm[amp22_max_idx]	
+#            ampdiff_lm = (np.amax(nr_strain_data[(2,2)]['amp']) - np.amax(amp_lm)) /np.amax(nr_strain_data[(2,2)]['amp'])*100
+#        
+#            if ((tdiff_lm > 10.0) and (ampdiff_lm<0.1)):
+#                print("(%d, %d): t_22 = %g, t_lm = %g, diff = %g, maxamp_22 = %g, maxamp_lm = %g \n"%(key[0], key[1], t_lm[amp22_max_idx], t_lm[maxampidx_lm], tdiff_lm, nr_strain_data[(2,2)]['amp'][amp22_max_idx], np.amax(amp_lm)))
+#        
+#        
+#        raise NameError('*(Create_single_h5) >>  Unexpected difference of %gM observed between time of peak of 22 mode and time of peak of strain amplitude (all modes). So#me mode is behaving incorrectly'%diff)
+#    elif verbose:
+#        print("*(Create_single_h5) >> Time difference between peak of strain amplitude and (2,2) mode amplitude is %gM \n"%(diff))
     
    
 
@@ -244,8 +243,11 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
     c = 2.99792458e8 # m/s
     mass_sec = G * mass_sun / ( c*c*c )
     simulation_mass_sec = ( 1.0 ) * mass_sec # NOTE that the 1.0 here is for 1solar mass
-    physical_freq_initial_at_1Msol = (Mf_initial/(2.*np.pi)) / simulation_mass_sec
    
+    #simulation_mass_sec = 4.92549102554*10**-6
+    
+    physical_freq_initial_at_1Msol = (Mf_initial/(2.*np.pi)) / simulation_mass_sec
+
     if verbose: 
         print('*(Create_single_h5) >> Gravitational Wave frequency from strain = %gHz, and from orbital frequency = %gHz \n'%(physical_freq_initial_at_1Msol, (2.*omega_st[0]/(2.*np.pi)/simulation_mass_sec)))
   
@@ -282,11 +284,15 @@ def create_single_h5 (dirpath, movepath_h5, movepath_wf, verbose=False):			 #dir
     sh.move(outpath, movepath_h5)
     
 
-#wf_direc = "/numrel/NumRel/bkhamesra3/Finalized_Waveforms/Waveform_files/Remaining/Precessing/Lq_D6.2_q2.50_a0.6_th015_m140"
-h5output_path = "/numrel/NumRel/Catalog/all_H5files" 
-wfoutput_path = "/numrel/NumRel/WaveformData/CatalogWaveformData/Completed"
-failed_path = "/numrel/NumRel/WaveformData/CatalogWaveformData/Failed"
-wf_direc = "/numrel/NumRel/WaveformData/CatalogWaveformData/Remaining/test"
+h5output_path = "/localdata/dferguson41/Catalog/h5_files/lvc" 
+wfoutput_path = "/localdata/dferguson41/Catalog/waveform_files/Completed"
+failed_path = "/localdata/dferguson41/Catalog/waveform_files/Failed/Precessing"
+wf_direc = "/localdata/dferguson41/Catalog/waveform_files/Remaining/Precessing"
+
+#h5output_path = "/numrel/NumRel/dferguson41/simulations/lisa_simulations/h5_files" 
+#wfoutput_path = "/numrel/NumRel/dferguson41/simulations/lisa_simulations/strain_files/Completed"
+#failed_path = "/numrel/NumRel/dferguson41/simulations/lisa_simulations/strain_files/Failed/AlignedSpin"
+#wf_direc = "/numrel/NumRel/dferguson41/simulations/lisa_simulations/strain_files/Remaining/AlignedSpin"
 
 if not os.path.exists(failed_path): os.makedirs(failed_path)
 if not os.path.exists(wfoutput_path): os.makedirs(wfoutput_path)
@@ -297,13 +303,13 @@ for direc in os.listdir(wf_direc):
     direc_path = os.path.join(wf_direc,direc)
     if os.path.isdir(direc_path):
         print("\n(h5script_Maya)* >> Starting the python script to create h5 files for waveform - {} \n".format(direc))
-        try:
-            create_single_h5(direc_path, h5output_path, wfoutput_path, verbose=True)
-        except (ValueError, NameError, AssertionError) as error :	#Remove except condition if testing Failed waveforms
-            print(error)
-            print("An Error occured. The file is being moved to Failed Directory")
-            sh.move(direc_path, failed_path )
-        except (sh.Error) as error :	#Remove except condition if testing Failed waveforms
-            print(error)
-            print("An Error occured. The file is being moved to Failed Directory")
-            sh.move(direc_path, failed_path )
+        #try:
+        create_single_h5(direc_path, h5output_path, wfoutput_path, verbose=True)
+#        except (ValueError, NameError, AssertionError) as error :	#Remove except condition if testing Failed waveforms
+#            print(error)
+#            print("An Error occured. The file is being moved to Failed Directory")
+#            sh.move(direc_path, failed_path )
+#        except (sh.Error) as error :	#Remove except condition if testing Failed waveforms
+#            print(error)
+#            print("An Error occured. The file is being moved to Failed Directory")
+#            sh.move(direc_path, failed_path )

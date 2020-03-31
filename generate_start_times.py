@@ -81,7 +81,7 @@ path_nonspinning = "/numrel/NumRel/dferguson41/GENERATING_CATALOG/ascii_data/Rem
 path_precessing = "/numrel/NumRel/dferguson41/GENERATING_CATALOG/ascii_data/Remaining/Precessing"
 #locations= ["D11_a0.2_q1.00_m103_As"]
 
-output_file = "Deb_wf_junkrad_after_strain_precessing.txt"
+output_file = "wf_junkrad_unformatted.txt"
 with open(output_file, 'w') as f:
     f.write("Tags \t Time of Junk \n")
 #    for location in os.listdir(path_aligned):

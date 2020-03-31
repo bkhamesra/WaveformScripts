@@ -322,7 +322,7 @@ def determine_production_run(dirpath):
 	par_b = output_data(parfile, 'par_b')
 	separation = 2.*par_b
 	
-	if separation<8: produc_run=0.
+	if separation<7: produc_run=0.
        
 	#Do not use runs with resolution less than M/120
 

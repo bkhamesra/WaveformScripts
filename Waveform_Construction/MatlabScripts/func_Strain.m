@@ -1,16 +1,20 @@
-%% Create the directory of the waveform
+%% -------------------------------------------------------------------
+%% Matlab Function to generate strain from given simulation directory
+%% Auther - Bhavesh Khamesra
+%% Package required - HealyToolkit
+%% -------------------------------------------------------------------
     
     
 function [] = func_Strain(outdirpath, wfpath, numrelpath)
 
-%check if output directory exists else create one
+% Check if output directory exists else create one
 if exist(outdirpath, 'dir')==7
     warning('Output directory exists at this path');
 else
     mkdir(outdirpath);
 end
 
-%Extract simulation name and create a directory for this simulation in the output directory
+% Extract simulation name and create a directory for this simulation in the output directory
 wfpath_parts = strsplit(wfpath, '/');
 if strcmp(wfpath_parts(length(wfpath_parts)),'')==1
     wfpath_parts = wfpath_parts(1:length(wfpath_parts)-1);
@@ -29,7 +33,7 @@ dirname = dirname_parts(length(dirname_parts));
 outdir =fullfile(outdirpath, strcat(dirname{1}, '/'));
 
 
-% All important data files will be stored in 'data' directory, strain files will be generated in 'data/Strain' directory while strain plots will be generated in 'Strain' directory 
+% All important data files will be stored in '<output_dir>/<simname>/data' directory, strain files will be generated in '<output_dir>/<simname>/data/Strain' directory while strain plots will be generated in '<output_dir>/<simname>/figures' directory 
 if exist(outdir,'dir')==7
      warning('Waveform Directory Already exist inside output directory');
 else 
@@ -40,7 +44,6 @@ datadir = fullfile(outdir, 'data');
 figdir = fullfile(outdir, 'figures');
 strdir = fullfile(datadir, 'Strain');
 
-%fprintf('%f \n', exist(datadir,'dir'));
 if (exist(datadir,'dir')==0)
     mkdir(datadir);
 end
@@ -54,9 +57,9 @@ if ne(exist(strdir, 'dir'),7)
 end
 
 
-%% Copy the necessary files from corresponding numrel - waveforms directory
+%% Copy the necessary files from corresponding simulation directory
 
-% Generate filepaths
+% Create filepaths
 simname = strsplit(dirname{1},'-all');
 fprintf('Simulation name - %s \n',simname{1});
 parfile = fullfile(wfpath,strcat(simname{1}, '.par'));    % [dirname{1},'.par']) ;
@@ -75,7 +78,7 @@ psi4_l6 = fullfile(wfpath , 'Ylm_WEYLSCAL4::Psi4r_l6_m6_r75.00.asc') ;
 mp_l8 = fullfile(wfpath, 'mp_WeylScal4::Psi4i_l8_m8_r75.00.asc');
 mp_l6 = fullfile(wfpath, 'mp_WeylScal4::Psi4i_l6_m6_r75.00.asc');
 
-% Copy the files
+% Copy the relevant files from simulation data
 copyfile(shifttracker0, datadir);
 copyfile(shifttracker1, datadir);
 copyfile(parfile, datadir)
@@ -122,7 +125,7 @@ end
 fprintf('lmax =  %d \n', lmax)
 
 
-%% Check precessing/aligned-spin/non-spinning
+%% Check spin type -  precessing/aligned-spin/non-spinning
 spin_plus = [];
 
 for k = 0:2
@@ -159,23 +162,30 @@ end
       
 
 
-%% Create the strain data
+%% Compute the strain data from Psi4
 
 l = 2:lmax  ;               %Change if all modes not present
 r = 75;
 
+% Collects data from all psi4 files for detector at radius r and modes 2:l
 bn = modeBundle(wfpath, l, r)
+
+% Compute the GW initial frequency
 bn.calcOmega
-bn.extrapolate(2)
+
+% Extrpolate the waveform
+bn = bn.extrapolate(2)
 if (ihfile==1)
    bn.init_rundata;
    sp = bn.rundata.BHp.spin;
    sm = bn.rundata.BHm.spin ;
     
 end
+
+% Compute Strain
 wf = bn.calcStrain;
 
-%To window a waveform, minimum time after max amplitude (2,2 mode) should
+%To window ends of a waveform, minimum time after max amplitude (2,2 mode) should
 %be > 120M
 [maxamp22, idx_maxamp22] = max(wf.Ampl(:,5));
 tmax_22 = wf.time(idx_maxamp22);
@@ -259,8 +269,8 @@ if (spintype==2)
     saveas(fig, fullfile(figdir,sprintf('Strain_l2m2_l2m-2_ampcomp.png')));
     close(fig);
 end
-%% Output data in text file
 
+%% Output data in text file
 
 for idx  = 1:max_idx
     [l,m] = bn.index_to_lm(idx);
@@ -280,18 +290,6 @@ for idx  = 1:max_idx
     fclose(strain_file);
 end
 
-%Spin Interpolated Data - Does not give correct results for various
-%waveforms
-% if ihfile==1
-%     spin_data = strcat(direc, '/Interpolated_Spindata.txt');
-%     spin_file = fopen(spin_data,'w');
-%     fprintf(spin_file, '# Time \t S1x \t S1y \t S1z \t S2x \t S2y \t S2z \n');
-%     writedata = [sp.t, sp.S(:,1), sp.S(:,2), sp.S(:,3), sm.S(:,1), sm.S(:,2), sm.S(:,3)];
-%     dlmwrite(spin_data, writedata, 'delimiter', '\t', 'precision','%0.10f');
-%     fclose(spin_file);
-% end
-
-
 if spintype == 0        %'NonSpinning'
     numrelpath = fullfile(numrelpath, 'NonSpinning')
 elseif spintype == 1       %'AlignSpins'
@@ -300,6 +298,7 @@ elseif spintype == 2     %'Precessing'
     numrelpath = fullfile(numrelpath, 'Precessing')
 end
 
+% Move the simulation data from output directory to 'Numrel' catalog directory
 movefile(outdir, numrelpath)
 clear();  
 end  

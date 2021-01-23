@@ -1,3 +1,7 @@
+#................................................................................................
+# Use: This script computes the initial configuration of the binary from the parfile
+# Author - Bhavesh Khamesra.
+#................................................................................................
 
 import numpy as np
 import os

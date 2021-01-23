@@ -1,18 +1,37 @@
+#-----------------------------------------------------------------------
+# Script - metadata.py
+# Author - Bhavesh Khamesra
+# Maintainer - Deborah Fergusson
+# Use - This script provides relevant functions to compute the metadata from simulation as specfied in arXiv:1703.01076. 
+#-----------------------------------------------------------------------
 import numpy as np
 import os 
 
 def error(msg):
+        '''Generate error message
+         
+         Parameters - 
+         msg (string) - message'''
 	print("*(Metadata) >> Error:%s" %msg)
 	raise ValueError(msg)
 
 def mag(vector):
+        '''Generate magnitude of numpy array
+         
+         Parameters - 
+         vector (numpy array) of shape (3,n)'''
 
 	magnitude = np.sqrt(vector[0]**2. + vector[1]**2. + vector[2]**2.)
 	return magnitude
 
 
-def importfile(dirpath, filename, Importance = 'Optional'):
-	
+def checkfile(dirpath, filename, Importance = 'Optional'):
+	''' Generate file path and check its existence
+        Parameters - 
+        dirpath (str) - simulation output path (from matlab script)
+        filename(str) - name of file 
+        Importance - File requirement Optional/Mandatory
+        '''
 	filepath = os.path.join(dirpath, filename)
 	if Importance=='Optional' and not os.path.isfile(filepath):
 		print("*(metadata) >> Warning: %s file missing, Corresponding data will be taken from parameter file" %filename)
@@ -23,21 +42,28 @@ def importfile(dirpath, filename, Importance = 'Optional'):
 		return filepath
 
 	
-def output_data(parfile, data):
+def output_data(parfile, parameter):
+	''' Extract parameter value from parfile 
+        Parameters - 
+        data(string) - parameter name
+        '''
 	
 	datafile = file(parfile)	
 	datafile.seek(0)
 	for line in datafile:
-	    if data in line:
+	    if parameter in line:
 	        break
 	line = line.split('=')[1]
-	data_value = float(line.split()[0])
+	parameter_value = float(line.split()[0])
 	datafile.close()
-	return data_value
+	return parameter_value
 
 
-# Finds the GTID correspondingto specific waveform
 def simulation_name(dirpath):
+	''' Finds the GTID corresponding to specific waveform from wf_junkrad.txt
+        Parameters - 
+        dirpath(str) - simulation path (from matlab output directory)
+        '''
 	
 	file_name = dirpath.split('/')[-1]
 	wf_junkrad = "wf_junkrad.txt"		#'/localdata/bkhamesra3/research_localdata/UsefulScripts/LIGO/LIGO_Scripts/LIGO_Metadata/LIGO_Scripts/wf_junkrad.txt'
@@ -56,6 +82,11 @@ def simulation_name(dirpath):
 
 
 def simulation_type(spin1, spin2):
+	''' Compute the spin type of simulation 
+        Parameters - 
+        spin1, spin2 (numpy array)  - initial spins of object 1 and 2
+        '''
+	
 
 	if (np.count_nonzero(spin1) ==0 and np.count_nonzero(spin2)==0): 
 		simtype = 'non-spinning'
@@ -69,6 +100,12 @@ def simulation_type(spin1, spin2):
 
 
 def updatespins(dirpath, retarted_junktime, spin1, spin2, verbose=True):
+	''' Compute the spins at junk time 
+        Parameters -
+        dirpath - simulation output path 
+        retarded_junktime (float) - junk radiation time in source frame (retarded time)
+        spin1, spin2 (numpy array)  - initial spins of object 1 and 2
+        '''
 	
 	datadir = os.path.join(dirpath, "data")
 	ihspin0_bh1 = os.path.join(datadir,'ihspin_hn_0.asc')
@@ -104,19 +141,19 @@ def updatespins(dirpath, retarted_junktime, spin1, spin2, verbose=True):
 		choose_ih34 = (tlast_ih34 >= retarted_junktime)
 	
 		if choose_ih01: 
-			ihspin0 = importfile(datadir, 'ihspin_hn_0.asc', 'Optional')
-			ihspin1 = importfile(datadir, 'ihspin_hn_1.asc', 'Optional')
+			ihspin0 = checkfile(datadir, 'ihspin_hn_0.asc', 'Optional')
+			ihspin1 = checkfile(datadir, 'ihspin_hn_1.asc', 'Optional')
 		elif tlast_ih01>=tlast_ih34:
-			ihspin0 = importfile(datadir, 'ihspin_hn_0.asc', 'Optional')
-			ihspin1 = importfile(datadir, 'ihspin_hn_1.asc', 'Optional')
+			ihspin0 = checkfile(datadir, 'ihspin_hn_0.asc', 'Optional')
+			ihspin1 = checkfile(datadir, 'ihspin_hn_1.asc', 'Optional')
 	    	elif tlast_ih34>tlast_ih01:
-			ihspin0 = importfile(datadir, 'ihspin_hn_3.asc', 'Optional')
-			ihspin1 = importfile(datadir, 'ihspin_hn_4.asc', 'Optional')
+			ihspin0 = checkfile(datadir, 'ihspin_hn_3.asc', 'Optional')
+			ihspin1 = checkfile(datadir, 'ihspin_hn_4.asc', 'Optional')
 		
 		 		    
 	elif not spindata_from_hznfndr and spindata_from_sphrad:
-		ihspin0 = importfile(datadir, 'ihspin_hn_3.asc', 'Optional')
-		ihspin1 = importfile(datadir, 'ihspin_hn_4.asc', 'Optional')
+		ihspin0 = checkfile(datadir, 'ihspin_hn_3.asc', 'Optional')
+		ihspin1 = checkfile(datadir, 'ihspin_hn_4.asc', 'Optional')
 	else:
 		ihspin0 = ihspin0_bh1
 		ihspin1 = ihspin1_bh2
@@ -165,11 +202,16 @@ def updatespins(dirpath, retarted_junktime, spin1, spin2, verbose=True):
 
 
 def updatemass(dirpath, retarted_junktime, verbose):
+        ''' Update masses of binary
+        Parameters -
+        dirpath - simulation output path 
+        retarded_junktime (float) - junk radiation time in source frame (retarded time)
+        '''
 
 	datadir = os.path.join(dirpath, "data")
 
-	bh_diag0 = importfile(datadir,'BH_diagnostics.ah1.gp')
-	bh_diag1 = importfile(datadir,'BH_diagnostics.ah2.gp')
+	bh_diag0 = checkfile(datadir,'BH_diagnostics.ah1.gp')
+	bh_diag1 = checkfile(datadir,'BH_diagnostics.ah2.gp')
 
 	if os.path.exists(bh_diag1):
 		time_bh1, irr_m1 = np.loadtxt(bh_diag0, usecols = (1,26), unpack=True, comments = '#')
@@ -198,12 +240,17 @@ def updatemass(dirpath, retarted_junktime, verbose):
 		
 
 def updatepos(dirpath, time_cutoff, verbose=False):
+        ''' Update positions of binary
+        Parameters -
+        dirpath - simulation output path 
+        time_cutoff(float) - time at which position vectors are computed(retarded junk radationtime)
+        '''
 
 	datadir = os.path.join(dirpath, "data")	
 	r1, r2, v1, v2 = np.zeros((4,3))	
 
-	shifttracker0 = importfile(datadir, 'ShiftTracker0.asc', Importance='Required')
-	shifttracker1 = importfile(datadir, 'ShiftTracker1.asc', Importance='Required')
+	shifttracker0 = checkfile(datadir, 'ShiftTracker0.asc', Importance='Required')
+	shifttracker1 = checkfile(datadir, 'ShiftTracker1.asc', Importance='Required')
 
 	time_shtr= np.loadtxt(shifttracker0, usecols = (1,), comments = '#')
 	temparr_shtr = np.where(time_shtr>=time_cutoff)
@@ -215,8 +262,11 @@ def updatepos(dirpath, time_cutoff, verbose=False):
 	if verbose: print("*(metadata) >> At time = {}, r1 = ({}, {}, {}) and r2 = ({}, {}, {}) \n".format(time_shtr[cutoff_idx_shtr], r1[0], r1[1], r1[2], r2[0], r2[1], r2[2]))
 	return [r1,r2, v1,v2]
 
-
 def func_phase(varphase):
+        ''' Update phase to be monotonic function
+        Parameters:
+        varphase(numpy array) - orbital phase 
+        '''
 
 	varphi = np.copy(varphase)
 	for i in range(len(varphase)):
@@ -226,17 +276,29 @@ def func_phase(varphase):
 
 
 def write_sep_data(filename,hdr, outdir, data):
+        ''' Save separation data to a filen
+        Parameters:
+        filename (str) - name of output file
+        hdr (str) - File header
+        outdir (str) - output directory
+        data(numpy array) - data to be saved
+        '''
 	output_traj = open(os.path.join(outdir, filename),'w')
 	np.savetxt(output_traj, data, header=hdr, delimiter='\t', newline='\n')
 	output_traj.close()
 
 
 def find_omega22_st(dirpath, time_cutoff):
+        ''' Find orbital frequency from trajectory data using numpy gradient (dφ/dt) 
+        Parameters:
+        dirpath (str) - simulation output directory
+        time_cutoff(float) - cutoff time
+        '''
 	
 	datadir = os.path.join(dirpath, "data")	
 
-	shifttracker0 = importfile(datadir, 'ShiftTracker0.asc', Importance='Required')
-	shifttracker1 = importfile(datadir, 'ShiftTracker1.asc', Importance='Required')
+	shifttracker0 = checkfile(datadir, 'ShiftTracker0.asc', Importance='Required')
+	shifttracker1 = checkfile(datadir, 'ShiftTracker1.asc', Importance='Required')
 
 	time_shtr = np.loadtxt(shifttracker0, usecols = (1), comments = '#')
 	temparr_shtr = np.intersect1d(np.where(time_shtr>=time_cutoff),  np.where(time_shtr<=150))
@@ -265,11 +327,16 @@ def find_omega22_st(dirpath, time_cutoff):
    	
 
 def update_orbital_frequency(dirpath, time_cutoff):
+        ''' Update orbital frequency from velocity and trajectory data  
+        Parameters:
+        dirpath (str) - simulation output directory
+        time_cutoff(float) - cutoff time
+        '''
 	
 	datadir = os.path.join(dirpath, "data")	
 
-	shifttracker0 = importfile(datadir, 'ShiftTracker0.asc', Importance='Required')
-	shifttracker1 = importfile(datadir, 'ShiftTracker1.asc', Importance='Required')
+	shifttracker0 = checkfile(datadir, 'ShiftTracker0.asc', Importance='Required')
+	shifttracker1 = checkfile(datadir, 'ShiftTracker1.asc', Importance='Required')
 
 	time_shtr = np.loadtxt(shifttracker0, usecols = (1), comments = '#')
 	temparr_shtr = np.intersect1d(np.where(time_shtr>=time_cutoff),  np.where(time_shtr<=150))
@@ -304,7 +371,9 @@ def update_orbital_frequency(dirpath, time_cutoff):
    
 
 def determine_production_run(dirpath):
-
+        ''' Check simulation quality based on grid resolution
+        dirpath - simulation output path
+        '''
 	produc_run = 1
 	
 	#Do not use runs with separation <8 as production runs:
@@ -374,6 +443,10 @@ def determine_production_run(dirpath):
 	return produc_run
 
 def get_mass_from_stdout(dirpath):
+        ''' Compute mass of binary from stdout
+        dirpath - path of simulation output (generated by matlab)
+        '''
+
         filename = dirpath+"/data/stdout"
         if not os.path.isfile(filename):
                 filename = dirpath+"/data/stdout-1"

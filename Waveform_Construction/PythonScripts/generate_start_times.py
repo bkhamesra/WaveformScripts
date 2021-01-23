@@ -1,8 +1,22 @@
+#-----------------------------------------------------------------------
+# Script - generate_start_time.py
+# Author - Deborah Fergusson
+# Function - Computes the starting time after passing of junk radiation 
+# and save output in wf_junkrad file
+#-----------------------------------------------------------------------
+
+
 import numpy as np
 import os
 import matplotlib.pyplot as plt
 
 def orbital_frequency(sim_path):
+    ''' Compute the orbital frequency from trajectory data 
+
+    Parameters:
+    sim_path (str) - path to simulation directory
+    '''
+    
     #Read in the data
     path1 = sim_path+"/data/ShiftTracker0.asc"
     path2 = sim_path+"/data/ShiftTracker1.asc"
@@ -28,6 +42,11 @@ def orbital_frequency(sim_path):
     return (time1,frequency)
 
 def gw_frequency(sim_path):
+    ''' Compute the gravitational wave frequency from trajectory data 
+
+    Parameters:
+    sim_path (str) - path to simulation directory
+    '''
     #Read in the data
     path = sim_path+"/data/Strain/Strain_l2_m2.txt"
     time, phase = np.loadtxt(path, usecols = (0,4), unpack = True)
@@ -38,6 +57,11 @@ def gw_frequency(sim_path):
     return (time,frequency)
 
 def find_cutoff(sim_path):
+    ''' Find the cut off frequency (where GW frequency ~ orbital frequency)
+
+    Parameters:
+    sim_path (str) - path to simulation directory
+    '''
     orbital_time, orbital_freq = orbital_frequency(sim_path)
     orbital_time = [x+75 for x in orbital_time]
     orbital_freq = 2*orbital_freq
@@ -59,7 +83,7 @@ def find_cutoff(sim_path):
     #plt.show()
 
     difference = abs(interp_gw - interp_orbital) 
-    print(times[0:59])
+    #print(times[0:59])
     cutoff = 0
 
     for i in range(50,len(difference)):

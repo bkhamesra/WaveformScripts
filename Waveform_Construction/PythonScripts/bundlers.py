@@ -1,7 +1,8 @@
 '''
-  irint("_greedy:...... Y ={} \n".format(y))
-module for routines that bundle many waveforms into a single object for output
-By Lionel London (lionel.london@ligo.org)
+Script Name - bundlers.py 
+This script is modified version from bundlers.py script by Lionel London
+Use - module for routines that bundle many waveforms into a single object for output
+Modified by - Bhavesh Khamesra
 '''
 
 

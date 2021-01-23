@@ -17,11 +17,17 @@ process raw simulation data into cleaned H5 format to allow its use for data ana
  -> Mean centering,
  -> junk radiation removal,
  -> Metadata Generation 
- -> Initial configuration extraction from simulations datafiles (ShiftTracker*.asc, ihspin_mass_hn*.asc, BH_diagnostics_ah*.asc, pararameter file, stdout)
- -> Data compresssion to H5 using romspline package
+ -> Initial configuration extraction from simulations datafiles (ShiftTracker\*.asc, ihspin_mass_hn\*.asc, BH_diagnostics_ah\*.asc, pararameter file, stdout)
+ -> Data compresssion to H5 using romspline package 
 
 The final h5 file ~25MB reduced from ~2GB of simulation data
 
 **Note** - The author does not take any responsibility for the use of these scripts.  Note that these scripts are not maintained by the author anymore. For any studies, it is highly recommended using updated version of scripts which can be obtained from UT Austin NR group (please contact me or UT Austin NR Group). While these can be adapted for similar NR codes, the scripts should be checked and tested for compatibility before use.
 
+## WaveformTesting
 
+Georgia Tech Catalog of simulations have been constructed over the years with different versions and updates of the software. Hence, when using a pipeline for a large number of simulations with varying database, it is important to test the generated waveform for various features including metadata validation, compatibility with other pipelines, numerical noise in various modes, etc. In **WaveformTesting** directory, I provide two jupyer notebooks to test these waveforms for any weird artifacts. These tests designed to provide a basic check on waveform structure but in no way the cover the entire spectrum of tests or make any claims about the correctness of the gravitational waveform. The structure of gravitational waveforms varies depending on the system configuration and is an active field of research. 
+
+Some of the tests include - 
+1. romSpline_h5File_test.ipynb - Gravitational waveforms in numerical simulations are projected onto the detectors and decomposed in terms of spin weighted spherical harmonic modes. The amplitude of each of these modes can vary significantly and hence, while doing romSpline, it is important to check if spline interpolation errors are not significantly large. One way to do this is by comparing the spline interpolant with strain data before interpolation. This script computes the errors between given modes of wavefom and spline interpolant. In general, we have found the errors to be reasonably small for all the simulations in the catalog. 
+2. 

@@ -1,6 +1,6 @@
 # Waveform Scripts - 
 
-In this repo, I have shared collection of my scripts for various waveform studies. 
+# In this repo, I have shared collection of my scripts for various waveform studies. 
 
 * WaveformConstruction directory contains scripts used to construct GT waveform catalog from numerical simulations of binary black hole and black hole neutron stars. These scripts are ideally based for use only with Georgia Tech code MAYA. 
 

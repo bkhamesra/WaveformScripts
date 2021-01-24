@@ -31,7 +31,7 @@ Georgia Tech Catalog of simulations have been constructed over the years with di
 Some of the tests include - 
 1. romSpline_h5File_test.ipynb - Gravitational waveforms in numerical simulations are projected onto the detectors and decomposed in terms of spin weighted spherical harmonic modes. The amplitude of each of these modes can vary significantly and hence, while doing romSpline, it is important to check if spline interpolation errors are not significantly large. One way to do this is by comparing the spline interpolant with strain data before interpolation. This script computes the errors between given modes of wavefom and spline interpolant. In general, we have found the errors to be reasonably small for all the simulations in the catalog. 
 2. WaveformTests.ipynb - This notebook performs the following tests :
-- Metadata Tests - 
+- ***Metadata Tests*** - 
   - masses, eta - individual masses should be less 1, sum should be close to 1, eta = m1\*m2/m_total\*\*2
   - spins - mag of spins should be less than 
   - fixed entries - 'Format', 'type', 'NR-group', 'NR-code', 'point-of-contact-email', 'INSPIRE-bibtex-keys', 'license','NR-techniques', 'PN_approximant'
@@ -39,7 +39,7 @@ Some of the tests include -
   - production-run - set to 0 if D<7, or resolution \<M/120 - done
   - lmax - check from amp and phase key values
 
--> Waveform Checks - 
+- ***Waveform Checks*** - 
   -  Check if all modes are present for all |m|\<l, l from (2 ... lmax)
   -  Check if all mode groups have necessary fields and data
   -  Check if m=0 modes are set to zero
